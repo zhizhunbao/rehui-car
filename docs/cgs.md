@@ -128,18 +128,18 @@ src/
 │   │       ├── recommendation.ts          # 推荐数据访问
 │   │       └── next-step.ts               # 下一步建议数据访问
 │   ├── constants/
-│   │   └── car-resources.ts               # 加拿大汽车资源配置 (待生成)
-│   ├── supabase.ts                        # Supabase客户端 (待生成)
-│   ├── gemini.ts                          # Google Gemini客户端 (待生成)
+│   │   └── car-resources.ts               # 加拿大汽车资源配置 ✅
+│   ├── supabase.ts                        # Supabase客户端 ✅
+│   ├── gemini.ts                          # Google Gemini客户端 ✅
 │   ├── utils.ts                           # 通用工具函数 ✅
 │   ├── constants.ts                       # 常量定义 ✅
 │   ├── validations.ts                     # 数据验证 ✅
+│   ├── prompts.ts                         # AI提示词模板 ✅
+│   ├── ai-utils.ts                        # AI工具函数 ✅
 │   ├── i18n.ts                           # 国际化 (待生成)
 │   ├── api-client.ts                      # API客户端封装 (待生成)
 │   ├── storage.ts                         # 本地存储工具 (待生成)
-│   ├── formatters.ts                      # 格式化工具 (待生成)
-│   ├── ai-utils.ts                        # AI工具函数 (待生成)
-│   └── prompts.ts                         # AI提示词模板 (待生成)
+│   └── formatters.ts                      # 格式化工具 (待生成)
 ├── hooks/                                 # 自定义Hooks (待生成)
 │   ├── useChat.ts                         # 聊天逻辑Hook
 │   ├── useLanguage.ts                     # 语言切换Hook
@@ -669,15 +669,94 @@ supabase/
 - 数据库健康检查
 - 所有6个表可访问性测试
 
+### 3.6 AI集成测试状态
+
+**测试文件**: `src/lib/__tests__/ai-integration.test.ts` ✅
+- 真实Gemini API连接测试
+- 聊天响应生成测试（中英文）
+- 车型推荐生成测试（中英文）
+- 对话摘要生成测试（中英文）
+- 错误处理和重试机制测试
+- 性能测试（响应时间、并发处理）
+
+**测试脚本**: `scripts/test-gemini-api.js` ✅
+- Gemini API密钥验证
+- 模型可用性检查
+- 真实API调用测试
+
 **测试脚本**: `scripts/test-real-database.js` ✅
 - Node.js独立测试脚本
 - 环境变量验证
 - 数据库连接测试
 - CRUD操作验证
 
-## 4. API路由规范
+## 4. AI集成规范
 
-### 4.1 聊天API
+### 4.1 Google Gemini AI 客户端
+**文件**: `src/lib/gemini.ts` ✅
+
+**核心功能**:
+- 聊天响应生成 (`generateChatResponse`)
+- 车型推荐生成 (`generateCarRecommendation`) 
+- 对话摘要生成 (`generateConversationSummary`)
+- 健康检查 (`healthCheck`)
+
+**技术特性**:
+- 使用 `gemini-2.5-flash` 模型
+- 支持中英文双语响应
+- 流式响应处理
+- 错误处理和重试机制
+- 环境变量安全配置
+
+### 4.2 AI提示词模板
+**文件**: `src/lib/prompts.ts` ✅
+
+**模板类型**:
+- 车型推荐提示词 (`CAR_RECOMMENDATION_PROMPT`)
+- 增强推荐提示词 (`ENHANCED_CAR_RECOMMENDATION_PROMPT`)
+- 对话摘要提示词
+- 聊天响应提示词
+
+**特性**:
+- 支持参数化替换
+- 中英文双语支持
+- 结构化输出格式
+- 上下文感知设计
+
+### 4.3 AI工具函数
+**文件**: `src/lib/ai-utils.ts` ✅
+
+**核心功能**:
+- AI响应解析 (`parseAIResponse`)
+- 响应验证 (`validateAIResponse`)
+- 推荐平台获取 (`getRecommendedPlatforms`)
+- 搜索链接生成 (`generateSearchLinks`)
+
+### 4.4 加拿大汽车资源配置
+**文件**: `src/lib/constants/car-resources.ts` ✅
+
+**资源类型**:
+- 二手车平台 (`USED_CAR_PLATFORMS`)
+- 拍卖平台 (`AUCTION_PLATFORMS`)
+- 车辆信息工具 (`VEHICLE_INFO_TOOLS`)
+
+**平台信息**:
+- AutoTrader.ca, Kijiji Autos, CarGurus.ca
+- 金融服务、保险、贷款平台
+- 车辆历史报告、VIN查询工具
+
+### 4.5 真实测试策略
+**核心原则**: 禁止使用Mock测试，全部使用真实数据和真实API调用
+
+**测试要求**:
+- 真实Gemini API调用
+- 真实环境变量配置
+- 真实网络请求
+- 真实错误处理测试
+
+## 5. API路由规范
+
+### 5.1 聊天API
 **文件**: `src/app/api/chat/route.ts`
 ```typescript
 // POST /api/chat - 发送消息获取AI回复
@@ -701,7 +780,7 @@ interface ChatResponse {
 }
 ```
 
-### 4.2 车型API
+### 5.2 车型API
 **文件**: `src/app/api/cars/route.ts`
 ```typescript
 // GET /api/cars - 获取车型列表
@@ -792,7 +871,7 @@ interface CarAvailability {
 // 暂时移除经销商类型定义，专注核心功能
 ```
 
-### 4.3 对话API
+### 5.3 对话API
 **文件**: `src/app/api/conversations/route.ts`
 ```typescript
 // GET /api/conversations - 获取对话列表
@@ -852,7 +931,7 @@ interface ConversationDetailResponse {
 }
 ```
 
-### 4.4 健康检查API
+### 5.4 健康检查API
 **文件**: `src/app/api/health/route.ts`
 ```typescript
 // GET /api/health - 系统健康检查
@@ -871,7 +950,7 @@ interface HealthResponse {
 }
 ```
 
-### 4.5 用户API
+### 5.5 用户API
 **文件**: `src/app/api/users/route.ts`
 ```typescript
 // GET /api/users - 获取用户信息
@@ -895,7 +974,7 @@ interface UserResponse {
 }
 ```
 
-### 4.6 推荐API
+### 5.6 推荐API
 **文件**: `src/app/api/recommendations/route.ts`
 ```typescript
 // GET /api/recommendations - 获取推荐历史
@@ -917,7 +996,7 @@ interface RecommendationsResponse {
 }
 ```
 
-### 4.7 API 错误处理规范
+### 5.7 API 错误处理规范
 ```typescript
 // 统一错误响应格式
 interface APIError {
@@ -952,32 +1031,32 @@ const ERROR_CODES = {
 } as const;
 ```
 
-## 5. 页面组件规范
+## 6. 页面组件规范
 
-### 5.1 首页
+### 6.1 首页
 **文件**: `src/app/page.tsx`
 ```typescript
 export default function HomePage(): JSX.Element
 // 功能: 欢迎页面，产品介绍，开始聊天按钮
 ```
 
-### 5.2 聊天页面
+### 6.2 聊天页面
 **文件**: `src/app/chat/page.tsx`
 ```typescript
 export default function ChatPage(): JSX.Element
 // 功能: 主聊天界面，消息列表，输入框，推荐卡片
 ```
 
-### 5.3 车型页面
+### 6.3 车型页面
 **文件**: `src/app/cars/page.tsx`
 ```typescript
 export default function CarsPage(): JSX.Element
 // 功能: 车型浏览，筛选，搜索
 ```
 
-## 6. 业务组件规范
+## 7. 业务组件规范
 
-### 6.1 聊天相关组件
+### 7.1 聊天相关组件
 
 **文件**: `src/components/custom/chat/ChatArea.tsx`
 ```typescript
@@ -1008,7 +1087,7 @@ interface ChatMessageProps {
 export function ChatMessage(props: ChatMessageProps): JSX.Element
 ```
 
-### 6.2 推荐相关组件
+### 7.2 推荐相关组件
 
 **文件**: `src/components/custom/recommendation/RecommendationCard.tsx`
 ```typescript
@@ -1038,7 +1117,7 @@ interface NextStepsProps {
 export function NextSteps(props: NextStepsProps): JSX.Element
 ```
 
-### 6.3 车型相关组件
+### 7.3 车型相关组件
 
 **文件**: `src/components/custom/car/CarCard.tsx`
 ```typescript
@@ -1060,7 +1139,7 @@ interface CarGridProps {
 export function CarGrid(props: CarGridProps): JSX.Element
 ```
 
-### 6.4 布局组件
+### 7.4 布局组件
 
 **文件**: `src/components/custom/layout/Header.tsx`
 ```typescript

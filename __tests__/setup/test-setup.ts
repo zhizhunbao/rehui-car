@@ -248,6 +248,67 @@ export const createMockCar = (overrides = {}) => ({
   ...overrides,
 });
 
+// 为 AI 集成测试添加 fetch polyfill
+if (typeof global.fetch === 'undefined') {
+  // 使用 Node.js 18+ 的内置 fetch 或 undici
+  try {
+    const { fetch } = require('undici');
+    global.fetch = fetch;
+  } catch (error) {
+    // 如果 undici 不可用，使用简单的 fetch 实现
+    global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const https = require('https');
+      const http = require('http');
+      const { URL } = require('url');
+      
+      return new Promise((resolve, reject) => {
+        const url = input instanceof Request ? input.url : input.toString();
+        const urlObj = new URL(url);
+        const isHttps = urlObj.protocol === 'https:';
+        const client = isHttps ? https : http;
+        
+        const requestOptions = {
+          hostname: urlObj.hostname,
+          port: urlObj.port || (isHttps ? 443 : 80),
+          path: urlObj.pathname + urlObj.search,
+          method: init?.method || 'GET',
+          headers: init?.headers || {}
+        };
+        
+        const req = client.request(requestOptions, (res: any) => {
+          let data = '';
+          res.on('data', (chunk: any) => data += chunk);
+          res.on('end', () => {
+            resolve({
+              ok: res.statusCode >= 200 && res.statusCode < 300,
+              status: res.statusCode,
+              statusText: res.statusMessage,
+              json: () => Promise.resolve(JSON.parse(data)),
+              text: () => Promise.resolve(data),
+              headers: new Headers(res.headers),
+              redirected: false,
+              type: 'basic' as ResponseType,
+              url: url,
+              clone: () => Promise.resolve() as any,
+              body: null,
+              bodyUsed: false,
+              arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+              blob: () => Promise.resolve(new Blob()),
+              formData: () => Promise.resolve(new FormData())
+            } as Response);
+          });
+        });
+        
+        req.on('error', reject);
+        if (init?.body) {
+          req.write(init.body);
+        }
+        req.end();
+      });
+    };
+  }
+}
+
 export const createMockConversation = (overrides = {}) => ({
   id: '1',
   userId: '1',
@@ -267,24 +328,39 @@ export const createMockMessage = (overrides = {}) => ({
   ...overrides,
 });
 
-// 测试环境变量 - 只在没有设置时才使用测试值
-// process.env.NODE_ENV 是只读的，不需要手动设置
+// 测试环境变量设置 - 全部使用真实值
+// 根据 docs/prompt.md 要求，禁止使用 mock 测试，全部使用真实数据和真实 API 调用
 
-// 对于真实数据库测试，我们需要使用真实的环境变量
-// 只有在运行单元测试时才使用测试值
-const isRealDatabaseTest = process.argv.some(arg => arg.includes('real-database.test.ts'));
+// 确保环境变量从 .env.local 文件加载
+import dotenv from 'dotenv';
+import path from 'path';
 
-if (!isRealDatabaseTest) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  }
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
-  }
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
-  }
-  if (!process.env.GOOGLE_GEMINI_API_KEY) {
-    process.env.GOOGLE_GEMINI_API_KEY = 'test-gemini-key';
-  }
+const envPath = path.resolve(process.cwd(), '.env.local');
+dotenv.config({ path: envPath });
+
+// 显示环境变量状态
+console.log('🧪 使用真实环境变量进行测试');
+console.log('Environment check:', {
+  hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+  hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  hasGeminiKey: !!process.env.GOOGLE_GEMINI_API_KEY,
+  geminiKeyPrefix: process.env.GOOGLE_GEMINI_API_KEY?.substring(0, 10) + '...',
+  envPath: envPath
+});
+
+// 验证必需的环境变量
+const requiredEnvVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'GOOGLE_GEMINI_API_KEY'
+];
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.warn('⚠️  缺少必需的环境变量:', missingVars);
+  console.warn('请确保 .env.local 文件包含所有必需的配置');
+} else {
+  console.log('✅ 所有必需的环境变量已配置');
 } 
