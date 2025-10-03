@@ -134,6 +134,56 @@ export interface CreateNextStepData {
   description_zh?: string;
   priority: 'high' | 'medium' | 'low';
   action_type: 'research' | 'visit' | 'contact' | 'prepare';
+  url?: string;
+  metadata?: Record<string, any>;
+  is_completed?: boolean;
+}
+
+// 对话详情响应类型
+export interface ConversationDetailResponse {
+  conversation: Conversation;
+  messages: ChatMessage[];
+  recommendations: import('./car').CarRecommendation[];
+  next_steps: import('./car').NextStep[];
+}
+
+// 分页参数类型
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+// API列表响应类型
+export interface APIListResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
+// 车型搜索参数类型
+export interface CarSearchParams {
+  language?: Language;
+  limit?: number;
+  category?: string;
+  price_range?: [number, number];
+}
+
+// 车型搜索响应类型
+export interface CarSearchResponse {
+  cars: import('./car').Car[];
+  total: number;
+  search_query: string;
+  suggestions?: string[];
+}
+
+// 排序参数类型
+export interface SortParams {
+  sort_by: 'price' | 'reliability' | 'fuel_economy' | 'safety' | 'created_at';
+  sort_order: 'asc' | 'desc';
 }
 
  

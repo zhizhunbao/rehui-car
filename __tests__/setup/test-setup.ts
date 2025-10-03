@@ -142,8 +142,8 @@ Object.defineProperty(window, 'sessionStorage', {
   value: sessionStorageMock,
 });
 
-// Mock fetch
-global.fetch = jest.fn();
+// 不 mock fetch，让 Supabase 使用真实的 fetch
+// global.fetch = jest.fn();
 
 // Mock console methods for cleaner test output
 const originalError = console.error;
@@ -267,9 +267,24 @@ export const createMockMessage = (overrides = {}) => ({
   ...overrides,
 });
 
-// 测试环境变量
-process.env.NODE_ENV = 'test';
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
-process.env.GOOGLE_GEMINI_API_KEY = 'test-gemini-key'; 
+// 测试环境变量 - 只在没有设置时才使用测试值
+// process.env.NODE_ENV 是只读的，不需要手动设置
+
+// 对于真实数据库测试，我们需要使用真实的环境变量
+// 只有在运行单元测试时才使用测试值
+const isRealDatabaseTest = process.argv.some(arg => arg.includes('real-database.test.ts'));
+
+if (!isRealDatabaseTest) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+  }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+  }
+  if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    process.env.GOOGLE_GEMINI_API_KEY = 'test-gemini-key';
+  }
+} 

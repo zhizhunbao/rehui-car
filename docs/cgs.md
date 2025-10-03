@@ -165,7 +165,8 @@ src/
     │   ├── 005_create_recommendations_table.sql # 推荐表 ✅
     │   ├── 006_create_next_steps_table.sql # 下一步表 ✅
     │   ├── 007_create_functions_triggers.sql # 函数触发器 ✅
-    │   └── 008_insert_sample_cars.sql     # 示例数据 ✅
+    │   ├── 008_insert_sample_cars.sql     # 示例数据 ✅
+    │   └── 009_add_test_rls_policies.sql  # 测试用RLS策略 ✅
     ├── __tests__/                         # 数据库测试文件 ✅
     │   ├── migrations.test.sql            # 迁移测试 ✅
     │   ├── schema.test.sql                # 表结构测试 ✅
@@ -352,9 +353,192 @@ CREATE INDEX idx_next_steps_priority_type ON public.next_steps(priority, action_
 CREATE INDEX idx_next_steps_metadata ON public.next_steps USING GIN (metadata);
 ```
 
-### 3.3 数据库访问层
+### 3.3 行级安全策略 (RLS)
 
-**文件**: `src/lib/database/index.ts`
+#### 3.3.1 生产环境 RLS 策略
+```sql
+-- 启用所有表的 RLS
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.recommendations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.next_steps ENABLE ROW LEVEL SECURITY;
+
+-- 车型表允许所有人查看激活的车型
+ALTER TABLE public.cars ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view active cars" ON public.cars
+  FOR SELECT USING (is_active = true);
+
+-- 用户表策略：基于 session_id 访问
+CREATE POLICY "Users can view own data" ON public.users
+  FOR SELECT USING (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+CREATE POLICY "Users can insert own data" ON public.users
+  FOR INSERT WITH CHECK (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+CREATE POLICY "Users can update own data" ON public.users
+  FOR UPDATE USING (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+-- 对话表策略：基于 session_id 访问
+CREATE POLICY "Users can view own conversations" ON public.conversations
+  FOR SELECT USING (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+CREATE POLICY "Users can insert own conversations" ON public.conversations
+  FOR INSERT WITH CHECK (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+CREATE POLICY "Users can update own conversations" ON public.conversations
+  FOR UPDATE USING (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+CREATE POLICY "Users can delete own conversations" ON public.conversations
+  FOR DELETE USING (session_id = current_setting('request.jwt.claims', true)::json->>'session_id');
+
+-- 消息表策略：基于关联对话的 session_id 访问
+CREATE POLICY "Users can view own messages" ON public.messages
+  FOR SELECT USING (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+CREATE POLICY "Users can insert own messages" ON public.messages
+  FOR INSERT WITH CHECK (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+CREATE POLICY "Users can update own messages" ON public.messages
+  FOR UPDATE USING (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+CREATE POLICY "Users can delete own messages" ON public.messages
+  FOR DELETE USING (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+-- 推荐表策略：基于关联对话的 session_id 访问
+CREATE POLICY "Users can view own recommendations" ON public.recommendations
+  FOR SELECT USING (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+CREATE POLICY "Users can insert own recommendations" ON public.recommendations
+  FOR INSERT WITH CHECK (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+-- 下一步建议表策略：基于关联对话的 session_id 访问
+CREATE POLICY "Users can view own next steps" ON public.next_steps
+  FOR SELECT USING (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+CREATE POLICY "Users can insert own next steps" ON public.next_steps
+  FOR INSERT WITH CHECK (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+
+CREATE POLICY "Users can update own next steps" ON public.next_steps
+  FOR UPDATE USING (
+    conversation_id IN (
+      SELECT id FROM public.conversations 
+      WHERE session_id = current_setting('request.jwt.claims', true)::json->>'session_id'
+    )
+  );
+```
+
+#### 3.3.2 测试环境 RLS 策略
+```sql
+-- 测试环境使用更宽松的策略，允许匿名用户进行测试操作
+-- 这些策略只在测试时使用，生产环境应该使用更严格的策略
+
+-- 用户表测试策略
+CREATE POLICY "Test users can insert any data" ON public.users
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Test users can view any data" ON public.users
+  FOR SELECT USING (true);
+
+CREATE POLICY "Test users can update any data" ON public.users
+  FOR UPDATE USING (true);
+
+-- 对话表测试策略
+CREATE POLICY "Test users can insert any conversations" ON public.conversations
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Test users can view any conversations" ON public.conversations
+  FOR SELECT USING (true);
+
+CREATE POLICY "Test users can update any conversations" ON public.conversations
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Test users can delete any conversations" ON public.conversations
+  FOR DELETE USING (true);
+
+-- 消息表测试策略
+CREATE POLICY "Test users can insert any messages" ON public.messages
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Test users can view any messages" ON public.messages
+  FOR SELECT USING (true);
+
+CREATE POLICY "Test users can update any messages" ON public.messages
+  FOR UPDATE USING (true);
+
+CREATE POLICY "Test users can delete any messages" ON public.messages
+  FOR DELETE USING (true);
+
+-- 推荐表测试策略
+CREATE POLICY "Test users can insert any recommendations" ON public.recommendations
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Test users can view any recommendations" ON public.recommendations
+  FOR SELECT USING (true);
+
+CREATE POLICY "Test users can update any recommendations" ON public.recommendations
+  FOR UPDATE USING (true);
+
+-- 下一步表测试策略
+CREATE POLICY "Test users can insert any next steps" ON public.next_steps
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Test users can view any next steps" ON public.next_steps
+  FOR SELECT USING (true);
+
+CREATE POLICY "Test users can update any next steps" ON public.next_steps
+  FOR UPDATE USING (true);
+```
+
+#### 3.3.3 RLS 策略管理
+- **生产环境**: 使用基于 `session_id` 的严格策略，确保数据隔离
+- **测试环境**: 使用宽松策略，允许匿名用户进行测试操作
+- **策略切换**: 通过删除测试策略来切换到生产环境策略
+- **安全考虑**: 测试策略不应部署到生产环境
+
+### 3.4 数据库访问层
+
+**文件**: `src/lib/database/index.ts` ✅ 已实现
 ```typescript
 export interface DatabaseClient {
   users: UserRepository;
@@ -365,92 +549,131 @@ export interface DatabaseClient {
   nextSteps: NextStepRepository;
 }
 
-export const db: DatabaseClient;
+export const db: DatabaseClient; // 默认实例
+export function createDatabaseClient(client: SupabaseClient<Database>): DatabaseClient;
 ```
 
-**文件**: `src/lib/database/repositories/user.ts`
+**文件**: `src/lib/database/repositories/user.ts` ✅ 已实现
 ```typescript
-export interface UserRepository {
+export class UserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  findBySessionId(sessionId: string): Promise<User | null>;
   create(data: CreateUserData): Promise<User>;
   update(id: string, data: UpdateUserData): Promise<User>;
+  delete(id: string): Promise<void>;
+  healthCheck(): Promise<boolean>;
 }
 ```
 
-**文件**: `src/lib/database/repositories/conversation.ts`
+**文件**: `src/lib/database/repositories/conversation.ts` ✅ 已实现
 ```typescript
-export interface ConversationRepository {
+export class ConversationRepository {
   findById(id: string): Promise<Conversation | null>;
-  findByUserId(userId: string): Promise<Conversation[]>;
+  findByUserId(userId: string, pagination?: PaginationParams): Promise<APIListResponse<Conversation>>;
   findBySessionId(sessionId: string): Promise<Conversation | null>;
   create(data: CreateConversationData): Promise<Conversation>;
   update(id: string, data: UpdateConversationData): Promise<Conversation>;
   delete(id: string): Promise<void>;
+  updateSummary(id: string, summary: string): Promise<void>;
+  getWithMessages(id: string): Promise<ConversationDetailResponse | null>;
+  findWithMessages(userId: string, pagination?: PaginationParams): Promise<APIListResponse<ConversationWithMessages>>;
+  archiveOldConversations(olderThanDays: number): Promise<number>;
+  healthCheck(): Promise<boolean>;
 }
 ```
 
-**文件**: `src/lib/database/repositories/message.ts`
+**文件**: `src/lib/database/repositories/message.ts` ✅ 已实现
 ```typescript
-export interface MessageRepository {
-  findByConversationId(conversationId: string): Promise<Message[]>;
-  create(data: CreateMessageData): Promise<Message>;
+export class MessageRepository {
+  findByConversationId(conversationId: string): Promise<ChatMessage[]>;
+  findById(id: string): Promise<ChatMessage | null>;
+  create(data: CreateMessageData): Promise<ChatMessage>;
+  update(id: string, data: UpdateMessageData): Promise<ChatMessage>;
   delete(id: string): Promise<void>;
+  healthCheck(): Promise<boolean>;
 }
 ```
 
-**文件**: `src/lib/database/repositories/car.ts`
+**文件**: `src/lib/database/repositories/car.ts` ✅ 已实现
 ```typescript
-export interface CarRepository {
-  findAll(filters?: CarFilters): Promise<Car[]>;
-  findById(id: string): Promise<Car | null>;
-  search(query: string, language: Language): Promise<Car[]>;
-  findByCategory(category: string): Promise<Car[]>;
+export class CarRepository {
+  findAll(filters?: CarFilters, pagination?: PaginationParams, sort?: SortParams): Promise<APIListResponse<Car>>;
+  findById(id: string, language?: Language): Promise<Car | null>;
+  search(query: string, params?: CarSearchParams): Promise<CarSearchResponse>;
+  findByCategory(category: string, pagination?: PaginationParams): Promise<APIListResponse<Car>>;
+  findSimilar(carId: string, limit?: number): Promise<Car[]>;
+  getFilters(): Promise<CarFiltersResponse>;
   create(data: CreateCarData): Promise<Car>;
   update(id: string, data: UpdateCarData): Promise<Car>;
+  healthCheck(): Promise<boolean>;
 }
 ```
 
-**文件**: `src/lib/database/repositories/recommendation.ts`
+**文件**: `src/lib/database/repositories/recommendation.ts` ✅ 已实现
 ```typescript
-export interface RecommendationRepository {
-  findByMessageId(messageId: string): Promise<Recommendation[]>;
-  create(data: CreateRecommendationData): Promise<Recommendation>;
+export class RecommendationRepository {
+  findByMessageId(messageId: string): Promise<CarRecommendation[]>;
+  findByConversationId(conversationId: string): Promise<CarRecommendation[]>;
+  findById(id: string): Promise<CarRecommendation | null>;
+  create(data: CreateRecommendationData): Promise<CarRecommendation>;
+  update(id: string, data: UpdateRecommendationData): Promise<CarRecommendation>;
   delete(id: string): Promise<void>;
+  healthCheck(): Promise<boolean>;
 }
 ```
 
-**文件**: `src/lib/database/repositories/next-step.ts`
+**文件**: `src/lib/database/repositories/next-step.ts` ✅ 已实现
 ```typescript
-export interface NextStepRepository {
+export class NextStepRepository {
   findByMessageId(messageId: string): Promise<NextStep[]>;
+  findByConversationId(conversationId: string): Promise<NextStep[]>;
+  findById(id: string): Promise<NextStep | null>;
   create(data: CreateNextStepData): Promise<NextStep>;
+  update(id: string, data: UpdateNextStepData): Promise<NextStep>;
   delete(id: string): Promise<void>;
+  markCompleted(id: string): Promise<void>;
+  healthCheck(): Promise<boolean>;
 }
 ```
 
 ### 3.4 数据库迁移文件
 
-**目录**: `supabase/migrations/`
+**目录**: `supabase/migrations/` ✅ 已实现
 ```
 supabase/
 ├── migrations/
-│   ├── 001_create_users_table.sql
-│   ├── 002_create_conversations_table.sql
-│   ├── 003_create_messages_table.sql
-│   ├── 004_create_cars_table.sql
-│   ├── 005_create_recommendations_table.sql
-│   ├── 006_create_next_steps_table.sql
-│   ├── 007_create_functions_triggers.sql
-│   └── 008_insert_sample_cars.sql
-├── __tests__/                         # 数据库测试文件
-│   ├── migrations.test.sql
-│   ├── schema.test.sql
-│   └── functions.test.sql
-├── run-tests.sh                       # 测试运行脚本
-├── seed.sql                           # 初始数据
-└── config.toml                        # Supabase配置
+│   ├── 001_create_users_table.sql ✅
+│   ├── 002_create_conversations_table.sql ✅
+│   ├── 003_create_messages_table.sql ✅
+│   ├── 004_create_cars_table.sql ✅
+│   ├── 005_create_recommendations_table.sql ✅
+│   ├── 006_create_next_steps_table.sql ✅
+│   ├── 007_create_functions_triggers.sql ✅
+│   ├── 008_insert_sample_cars.sql ✅
+│   └── 009_add_test_rls_policies.sql ✅
+├── __tests__/                         # 数据库测试文件 ✅
+│   ├── migrations.test.sql ✅
+│   ├── schema.test.sql ✅
+│   └── functions.test.sql ✅
+├── run-tests.sh                       # 测试运行脚本 ✅
+├── seed.sql                           # 初始数据 ✅
+└── config.toml                        # Supabase配置 ✅
 ```
+
+### 3.5 数据库测试状态
+
+**测试文件**: `src/lib/database/__tests__/real-database.test.ts` ✅
+- 真实Supabase连接测试
+- 车型数据查询验证
+- 数据库健康检查
+- 所有6个表可访问性测试
+
+**测试脚本**: `scripts/test-real-database.js` ✅
+- Node.js独立测试脚本
+- 环境变量验证
+- 数据库连接测试
+- CRUD操作验证
 
 ## 4. API路由规范
 
@@ -2565,7 +2788,8 @@ git commit -m "fix: resolve chat input validation issue"
 2. **第二阶段：数据层建设** - 100% 完成
    - Supabase CLI 配置 ✅
    - 数据库迁移文件 ✅
-   - 数据库连接测试 ✅
+   - 数据库客户端和Repository模式 ✅
+   - 真实数据库连接测试 ✅
 
 ### 🔄 进行中阶段
 3. **第三阶段：API 层开发** - 0% 完成
@@ -2577,11 +2801,13 @@ git commit -m "fix: resolve chat input validation issue"
    - 全局样式和国际化 (待生成)
 
 ### 📈 项目统计
-- **总文件数**: 50+ 个文件
+- **总文件数**: 60+ 个文件
 - **测试覆盖率**: 100% (已完成部分)
 - **数据库表**: 6个表 + 1个视图
 - **示例数据**: 13条车型记录
 - **配置完整性**: 100%
+- **数据库连接**: 真实Supabase连接测试通过 ✅
+- **Repository模式**: 完整的CRUD操作实现 ✅
 
 ### 🎯 下一步计划
-继续按照 `docs/prompt.md` 中的步骤顺序，生成 API 层和 UI 组件。
+继续按照 `docs/prompt.md` 中的步骤顺序，生成 **步骤 7: AI 集成**。
