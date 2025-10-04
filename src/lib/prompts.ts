@@ -1,123 +1,103 @@
 /**
- * AI 提示词模板
- * 包含各种场景的提示词模板，用于生成一致的 AI 响应
+ * AI 提示词管理
+ * 统一管理所有 AI 提示词模板和系统消息
  */
 
-import { Language, BilingualText } from '@/types';
+import { Language, ChatMessage } from '@/types';
 
 /**
- * 车型推荐提示词模板
+ * 系统提示词模板
  */
-export const CAR_RECOMMENDATION_PROMPT = (userMessage: string, language: Language) => {
-  const isChinese = language === 'zh';
-  
-  return isChinese ? `
-你是一个专业的加拿大汽车购买顾问助手。请基于用户需求提供个性化的汽车推荐和购买指导。
+export const SYSTEM_PROMPTS = {
+  car_advisor: {
+    zh: `你是一个专业的加拿大汽车购买顾问助手。你的任务是：
 
-用户需求: ${userMessage}
-回复语言: 中文
+1. 理解用户的汽车购买需求
+2. 基于预算、用途、偏好等因素提供个性化推荐
+3. 提供详细的车型分析和比较
+4. 给出实用的购买建议和后续步骤
 
-请在推荐中包含以下信息：
-- 车型品牌和型号
-- 匹配度评分 (0-1)
-- 推荐理由 (中英文)
-- 价格范围 (加元)
-- 适用场景
-- 优缺点分析
+请始终保持专业、友好和有用的态度。`,
+    en: `You are a professional Canadian car buying advisor assistant. Your tasks are:
 
-请返回以下JSON格式:
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
+1. Understand user's car buying needs
+2. Provide personalized recommendations based on budget, usage, preferences
+3. Offer detailed car model analysis and comparisons
+4. Give practical buying advice and next steps
+
+Always maintain a professional, friendly, and helpful attitude.`
   },
-  "recommendations": [
-    {
-      "car_make": "品牌",
-      "car_model": "型号", 
-      "match_score": 0.95,
-      "reasoning": {
-        "en": "English reasoning",
-        "zh": "中文推理"
-      }
-    }
-  ],
-  "next_steps": [
-    {
-      "title": {
-        "en": "English title",
-        "zh": "中文标题"
-      },
-      "description": {
-        "en": "English description", 
-        "zh": "中文描述"
-      },
-      "priority": "high",
-      "action_type": "research"
-    }
-  ]
-}
-` : `
-You are a professional Canadian car buying advisor assistant. Please provide personalized car recommendations and buying guidance based on user needs.
 
-User needs: ${userMessage}
-Response language: English
+  car_recommender: {
+    zh: `你是一个汽车推荐专家。请基于以下信息提供精准的车型推荐：
 
-Please include the following information in your recommendations:
-- Car brand and model
-- Match score (0-1)
-- Reasoning (English and Chinese)
-- Price range (CAD)
-- Use cases
-- Pros and cons analysis
+- 用户预算范围
+- 主要用途（通勤、家庭、商务等）
+- 偏好品牌和车型
+- 特殊需求（环保、性能、空间等）
 
-Please return the following JSON format:
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
+请提供3-5个推荐车型，并说明推荐理由。`,
+    en: `You are a car recommendation expert. Please provide accurate car recommendations based on:
+
+- User's budget range
+- Primary usage (commuting, family, business, etc.)
+- Preferred brands and models
+- Special requirements (eco-friendly, performance, space, etc.)
+
+Please provide 3-5 recommended models with reasoning.`
   },
-  "recommendations": [
-    {
-      "car_make": "Brand",
-      "car_model": "Model", 
-      "match_score": 0.95,
-      "reasoning": {
-        "en": "English reasoning",
-        "zh": "中文推理"
-      }
-    }
-  ],
-  "next_steps": [
-    {
-      "title": {
-        "en": "English title",
-        "zh": "中文标题"
-      },
-      "description": {
-        "en": "English description", 
-        "zh": "中文描述"
-      },
-      "priority": "high",
-      "action_type": "research"
-    }
-  ]
-}
-`;
+
+  conversation_summarizer: {
+    zh: `请为以下对话生成一个简洁的摘要，突出关键信息和用户需求。`,
+    en: `Please generate a concise summary of the following conversation, highlighting key information and user needs.`
+  }
 };
 
 /**
- * 对话摘要提示词模板
+ * 提示词模板
  */
-export const CONVERSATION_SUMMARY_PROMPT = (messages: string[], language: Language) => {
-  const isChinese = language === 'zh';
-  const conversationText = messages.join('\n');
-  
-  return isChinese ? `
-请为以下对话生成一个简洁的摘要，使用中文：
+export const PROMPT_TEMPLATES = {
+  chat_response: {
+    zh: `基于以下对话历史，请提供有用的汽车购买建议：
+
+对话历史：
+{conversationHistory}
+
+请返回JSON格式的响应。`,
+    en: `Based on the following conversation history, please provide useful car buying advice:
+
+Conversation History:
+{conversationHistory}
+
+Please return a JSON formatted response.`
+  },
+
+  car_recommendation: {
+    zh: `用户需求：{userMessage}
+
+请基于用户需求提供个性化的汽车推荐，包括：
+1. 推荐车型及理由
+2. 价格范围
+3. 主要特点
+4. 购买建议
+
+请返回JSON格式。`,
+    en: `User Requirements: {userMessage}
+
+Please provide personalized car recommendations based on user needs, including:
+1. Recommended models and reasoning
+2. Price range
+3. Key features
+4. Buying advice
+
+Please return JSON format.`
+  },
+
+  conversation_summary: {
+    zh: `请为以下对话生成摘要：
 
 对话内容：
-${conversationText}
+{conversationHistory}
 
 请返回JSON格式：
 {
@@ -125,12 +105,11 @@ ${conversationText}
     "en": "English summary",
     "zh": "中文摘要"
   }
-}
-` : `
-Please generate a concise summary for the following conversation in English:
+}`,
+    en: `Please generate a summary for the following conversation:
 
 Conversation:
-${conversationText}
+{conversationHistory}
 
 Please return JSON format:
 {
@@ -138,311 +117,189 @@ Please return JSON format:
     "en": "English summary",
     "zh": "中文摘要"
   }
-}
-`;
+}`
+  }
 };
 
 /**
- * 车型比较提示词模板
+ * 响应格式模板
  */
-export const CAR_COMPARISON_PROMPT = (cars: string[], language: Language) => {
-  const isChinese = language === 'zh';
-  const carsText = cars.join('\n');
-  
-  return isChinese ? `
-请比较以下车型，提供详细的对比分析：
-
-车型列表：
-${carsText}
-
-请从以下维度进行比较：
-- 价格性价比
-- 可靠性评分
-- 燃油经济性
-- 安全评级
-- 适用场景
-- 维护成本
-- 保值率
-
-请返回JSON格式：
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
-  },
-  "comparison": [
-    {
-      "car": "车型名称",
-      "score": 8.5,
-      "pros": ["优点1", "优点2"],
-      "cons": ["缺点1", "缺点2"],
-      "recommendation": "推荐理由"
-    }
-  ],
-  "winner": "推荐车型",
-  "reasoning": "选择理由"
-}
-` : `
-Please compare the following cars and provide detailed comparison analysis:
-
-Car list:
-${carsText}
-
-Please compare from the following dimensions:
-- Price value
-- Reliability score
-- Fuel economy
-- Safety rating
-- Use cases
-- Maintenance cost
-- Resale value
-
-Please return JSON format:
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
-  },
-  "comparison": [
-    {
-      "car": "Car name",
-      "score": 8.5,
-      "pros": ["Pro 1", "Pro 2"],
-      "cons": ["Con 1", "Con 2"],
-      "recommendation": "Recommendation reason"
-    }
-  ],
-  "winner": "Recommended car",
-  "reasoning": "Selection reason"
-}
-`;
-};
-
-/**
- * 预算分析提示词模板
- */
-export const BUDGET_ANALYSIS_PROMPT = (budget: number, currency: string, language: Language) => {
-  const isChinese = language === 'zh';
-  
-  return isChinese ? `
-请基于预算 ${budget} ${currency} 提供汽车购买建议：
-
-预算分析维度：
-- 新车 vs 二手车选择
-- 不同价位段的车型推荐
-- 贷款 vs 全款购买建议
-- 保险和维护成本估算
-- 保值率考虑
-- 分期付款方案
-
-请返回JSON格式：
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
-  },
-  "budget_analysis": {
-    "new_cars": ["新车推荐1", "新车推荐2"],
-    "used_cars": ["二手车推荐1", "二手车推荐2"],
-    "financing_options": ["贷款方案1", "贷款方案2"],
-    "total_cost_estimate": {
-      "purchase": 25000,
-      "insurance": 2000,
-      "maintenance": 1500,
-      "total_first_year": 28500
-    }
-  },
-  "recommendations": [
-    {
-      "type": "new_car",
-      "car": "推荐车型",
-      "price": 25000,
-      "reasoning": "推荐理由"
-    }
-  ]
-}
-` : `
-Please provide car buying advice based on budget ${budget} ${currency}:
-
-Budget analysis dimensions:
-- New car vs used car options
-- Car recommendations in different price ranges
-- Loan vs cash purchase advice
-- Insurance and maintenance cost estimates
-- Resale value considerations
-- Payment plan options
-
-Please return JSON format:
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
-  },
-  "budget_analysis": {
-    "new_cars": ["New car 1", "New car 2"],
-    "used_cars": ["Used car 1", "Used car 2"],
-    "financing_options": ["Financing 1", "Financing 2"],
-    "total_cost_estimate": {
-      "purchase": 25000,
-      "insurance": 2000,
-      "maintenance": 1500,
-      "total_first_year": 28500
-    }
-  },
-  "recommendations": [
-    {
-      "type": "new_car",
-      "car": "Recommended car",
-      "price": 25000,
-      "reasoning": "Recommendation reason"
-    }
-  ]
-}
-`;
-};
-
-/**
- * 购车流程指导提示词模板
- */
-export const BUYING_PROCESS_PROMPT = (language: Language) => {
-  const isChinese = language === 'zh';
-  
-  return isChinese ? `
-请提供详细的加拿大购车流程指导：
-
-购车流程步骤：
-1. 需求分析和预算制定
-2. 车型研究和比较
-3. 经销商选择和预约试驾
-4. 车辆检查和历史报告
-5. 价格谈判和合同签署
-6. 贷款申请和审批
-7. 保险购买
-8. 车辆注册和上牌
-9. 交车和验收
-10. 后续维护和服务
-
-请返回JSON格式：
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
-  },
-  "process_steps": [
-    {
-      "step": 1,
-      "title": {
-        "en": "English title",
-        "zh": "中文标题"
+export const RESPONSE_FORMATS = {
+  chat_response: {
+    structure: {
+      summary: {
+        en: "string",
+        zh: "string"
       },
-      "description": {
-        "en": "English description",
-        "zh": "中文描述"
-      },
-      "tips": ["提示1", "提示2"],
-      "documents_needed": ["文件1", "文件2"]
+      recommendations: [
+        {
+          car_make: "string",
+          car_model: "string",
+          match_score: "number (0-1)",
+          reasoning: {
+            en: "string",
+            zh: "string"
+          }
+        }
+      ],
+      next_steps: [
+        {
+          title: {
+            en: "string",
+            zh: "string"
+          },
+          description: {
+            en: "string",
+            zh: "string"
+          },
+          priority: "high|medium|low",
+          action_type: "research|contact|test_drive|purchase"
+        }
+      ]
     }
-  ],
-  "important_notes": [
-    "重要提醒1",
-    "重要提醒2"
-  ]
-}
-` : `
-Please provide detailed Canadian car buying process guidance:
-
-Car buying process steps:
-1. Needs analysis and budget planning
-2. Car research and comparison
-3. Dealer selection and test drive appointment
-4. Vehicle inspection and history report
-5. Price negotiation and contract signing
-6. Loan application and approval
-7. Insurance purchase
-8. Vehicle registration and licensing
-9. Delivery and acceptance
-10. Follow-up maintenance and service
-
-Please return JSON format:
-{
-  "summary": {
-    "en": "English summary",
-    "zh": "中文总结"
-  },
-  "process_steps": [
-    {
-      "step": 1,
-      "title": {
-        "en": "English title",
-        "zh": "中文标题"
-      },
-      "description": {
-        "en": "English description",
-        "zh": "中文描述"
-      },
-      "tips": ["Tip 1", "Tip 2"],
-      "documents_needed": ["Document 1", "Document 2"]
-    }
-  ],
-  "important_notes": [
-    "Important note 1",
-    "Important note 2"
-  ]
-}
-`;
+  }
 };
 
 /**
- * 错误处理提示词模板
+ * 构建聊天提示词
  */
-export const ERROR_HANDLING_PROMPT = (error: string, language: Language) => {
-  const isChinese = language === 'zh';
+export function buildChatPrompt(messages: ChatMessage[], language: Language): string {
+  const conversationHistory = messages
+    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+    .join('\n');
   
-  return isChinese ? `
-抱歉，在处理您的请求时遇到了问题：${error}
+  return PROMPT_TEMPLATES.chat_response[language].replace('{conversationHistory}', conversationHistory);
+}
 
-请稍后重试，或者您可以：
-1. 重新描述您的需求
-2. 提供更具体的信息
-3. 尝试不同的关键词
+/**
+ * 构建车型推荐提示词
+ */
+export function buildCarRecommendationPrompt(userMessage: string, language: Language): string {
+  return PROMPT_TEMPLATES.car_recommendation[language].replace('{userMessage}', userMessage);
+}
 
-我会继续为您提供汽车购买建议。
-` : `
-Sorry, we encountered an issue while processing your request: ${error}
+/**
+ * 构建摘要提示词
+ */
+export function buildSummaryPrompt(messages: ChatMessage[], language: Language): string {
+  const conversationHistory = messages
+    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+    .join('\n');
+  
+  return PROMPT_TEMPLATES.conversation_summary[language].replace('{conversationHistory}', conversationHistory);
+}
 
-Please try again later, or you can:
-1. Redescribe your needs
-2. Provide more specific information
-3. Try different keywords
+/**
+ * 获取系统提示词
+ */
+export function getSystemPrompt(type: keyof typeof SYSTEM_PROMPTS, language: Language): string {
+  return SYSTEM_PROMPTS[type][language];
+}
 
-I'll continue to provide car buying advice for you.
-`;
+/**
+ * 验证响应格式
+ */
+export function validateResponseFormat(response: any): boolean {
+  try {
+    // 检查基本结构
+    if (!response.summary || !response.recommendations || !response.next_steps) {
+      return false;
+    }
+    
+    // 检查摘要格式
+    if (!response.summary.en || !response.summary.zh) {
+      return false;
+    }
+    
+    // 检查推荐格式
+    if (!Array.isArray(response.recommendations)) {
+      return false;
+    }
+    
+    // 检查下一步格式
+    if (!Array.isArray(response.next_steps)) {
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * 清理和格式化响应
+ */
+export function cleanResponse(response: string): string {
+  let cleaned = response.trim();
+  
+  // 移除markdown代码块标记
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+  
+  // 尝试提取 JSON 部分
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    cleaned = jsonMatch[0];
+  }
+  
+  // 修复常见的JSON格式问题
+  cleaned = cleaned
+    .replace(/,(\s*[}\]])/g, '$1') // 移除多余的逗号
+    .replace(/([{\[,])\s*([}\]])/g, '$1$2') // 修复空对象/数组
+    .replace(/([^\\])\n/g, '$1\\n') // 转义换行符
+    .replace(/([^\\])\r/g, '$1\\r') // 转义回车符
+    .replace(/([^\\])\t/g, '$1\\t'); // 转义制表符
+  
+  return cleaned;
+}
+
+/**
+ * 默认响应模板
+ */
+export const DEFAULT_RESPONSES = {
+  error: {
+    zh: {
+      summary: {
+        en: "I apologize, but I encountered an error processing your request.",
+        zh: "抱歉，处理您的请求时遇到了错误。"
+      },
+      recommendations: [],
+      next_steps: []
+    }
+  },
+  
+  no_recommendations: {
+    zh: {
+      summary: {
+        en: "I need more information to provide car recommendations.",
+        zh: "我需要更多信息来提供汽车推荐。"
+      },
+      recommendations: [],
+      next_steps: [
+        {
+          title: {
+            en: "Provide more details",
+            zh: "提供更多详细信息"
+          },
+          description: {
+            en: "Please tell me about your budget, usage needs, and preferences.",
+            zh: "请告诉我您的预算、使用需求和偏好。"
+          },
+          priority: "high",
+          action_type: "research"
+        }
+      ]
+    }
+  }
 };
 
 /**
- * 获取双语文本的工具函数
+ * 获取默认响应
  */
-export function getBilingualText(text: BilingualText, language: Language): string {
-  return text[language] || text.en || '';
-}
-
-/**
- * 格式化双语文本
- */
-export function formatBilingualText(en: string, zh: string): BilingualText {
-  return { en, zh };
-}
-
-/**
- * 验证提示词响应格式
- */
-export function validatePromptResponse(response: any): boolean {
-  return (
-    response &&
-    response.summary &&
-    response.summary.en &&
-    response.summary.zh &&
-    typeof response.summary.en === 'string' &&
-    typeof response.summary.zh === 'string'
-  );
+export function getDefaultResponse(type: keyof typeof DEFAULT_RESPONSES, language: Language) {
+  return DEFAULT_RESPONSES[type][language as keyof typeof DEFAULT_RESPONSES[typeof type]];
 }

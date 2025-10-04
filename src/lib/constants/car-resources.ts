@@ -1,364 +1,421 @@
 /**
- * 加拿大汽车资源配置
- * 包含各种汽车购买平台、经销商、金融服务等信息
+ * 汽车资源常量
+ * 包含汽车品牌、型号、价格范围等静态数据
  */
 
-// 二手车平台配置
-export const USED_CAR_PLATFORMS = {
-  // 主流平台
-  AUTOTRADER: {
-    name: 'AutoTrader.ca',
-    url: 'https://www.autotrader.ca/',
-    description: '加拿大最大二手车平台，新车+二手车，覆盖面最广',
-    type: 'marketplace',
-    features: ['new_cars', 'used_cars', 'dealer_network', 'price_alerts'],
-    search_template: 'https://www.autotrader.ca/cars/{make}/{model}/'
+/**
+ * 汽车品牌信息
+ */
+export const CAR_BRANDS = {
+  // 日系品牌
+  toyota: {
+    name: { en: 'Toyota', zh: '丰田' },
+    country: 'Japan',
+    reliability: 9.2,
+    price_range: { min: 20000, max: 80000 },
+    popular_models: ['Camry', 'Corolla', 'RAV4', 'Highlander', 'Prius']
   },
-  CARGURUS: {
-    name: 'CarGurus Canada',
-    url: 'https://www.cargurus.ca/Cars/spt-used-cars',
-    description: 'CarGurus加拿大站，价格评估(Fair/Good/Bad Deal)很实用',
-    type: 'marketplace',
-    features: ['price_analysis', 'deal_rating', 'market_insights'],
-    search_template: 'https://www.cargurus.ca/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?sourceContext=carGurusHomePageModel&entitySelectingHelper.selectedEntity={make}'
+  
+  honda: {
+    name: { en: 'Honda', zh: '本田' },
+    country: 'Japan',
+    reliability: 9.0,
+    price_range: { min: 22000, max: 75000 },
+    popular_models: ['Civic', 'Accord', 'CR-V', 'Pilot', 'Fit']
   },
-  CARPAGES: {
-    name: 'CarPages.ca',
-    url: 'https://www.carpages.ca/',
-    description: '本地化二手车网站，车源覆盖全国但偏地方车商',
-    type: 'marketplace',
-    features: ['local_dealers', 'nationwide_coverage'],
-    search_template: 'https://www.carpages.ca/used-cars/{make}/{model}/'
+  
+  mazda: {
+    name: { en: 'Mazda', zh: '马自达' },
+    country: 'Japan',
+    reliability: 8.8,
+    price_range: { min: 25000, max: 70000 },
+    popular_models: ['Mazda3', 'Mazda6', 'CX-5', 'CX-9', 'MX-5']
   },
-  CLUTCH: {
-    name: 'Clutch.ca',
-    url: 'https://www.clutch.ca/',
-    description: '在线零售商，提供整备车+送车到家服务',
-    type: 'online_retailer',
-    features: ['home_delivery', 'vehicle_preparation', 'warranty'],
-    search_template: 'https://www.clutch.ca/cars/{make}/{model}/'
+  
+  subaru: {
+    name: { en: 'Subaru', zh: '斯巴鲁' },
+    country: 'Japan',
+    reliability: 8.9,
+    price_range: { min: 28000, max: 85000 },
+    popular_models: ['Impreza', 'Legacy', 'Outback', 'Forester', 'WRX']
   },
-  CANADA_DRIVES: {
-    name: 'Canada Drives',
-    url: 'https://www.canadadrives.ca/',
-    description: '在线购车平台，支持车辆送货上门',
-    type: 'online_retailer',
-    features: ['home_delivery', 'financing', 'trade_in'],
-    search_template: 'https://www.canadadrives.ca/cars/{make}/{model}/'
+  
+  nissan: {
+    name: { en: 'Nissan', zh: '日产' },
+    country: 'Japan',
+    reliability: 8.5,
+    price_range: { min: 20000, max: 90000 },
+    popular_models: ['Altima', 'Sentra', 'Rogue', 'Pathfinder', 'Leaf']
   },
-  KIJIJI: {
-    name: 'Kijiji Autos',
-    url: 'https://www.kijiji.ca/b-cars-vehicles/canada/c27l0',
-    description: 'Kijiji分类广告，个人卖家和小车行常用',
-    type: 'classified',
-    features: ['private_sellers', 'local_deals', 'negotiable_prices'],
-    search_template: 'https://www.kijiji.ca/b-cars-vehicles/canada/{make}+{model}/k0c27l0'
+  
+  // 德系品牌
+  bmw: {
+    name: { en: 'BMW', zh: '宝马' },
+    country: 'Germany',
+    reliability: 8.3,
+    price_range: { min: 40000, max: 150000 },
+    popular_models: ['3 Series', '5 Series', 'X3', 'X5', 'i3']
   },
-  FACEBOOK_MARKETPLACE: {
-    name: 'Facebook Marketplace',
-    url: 'https://www.facebook.com/marketplace/category/vehicles/',
-    description: 'Facebook Marketplace，本地人气最高的私人卖车渠道',
-    type: 'classified',
-    features: ['private_sellers', 'local_focus', 'social_verification'],
-    search_template: 'https://www.facebook.com/marketplace/category/vehicles/'
+  
+  mercedes: {
+    name: { en: 'Mercedes-Benz', zh: '奔驰' },
+    country: 'Germany',
+    reliability: 8.4,
+    price_range: { min: 45000, max: 200000 },
+    popular_models: ['C-Class', 'E-Class', 'GLC', 'GLE', 'S-Class']
   },
-  BRICK_AND_MOTOR: {
-    name: 'Brick and Motor',
-    url: 'https://www.brickandmotor.ca/',
-    description: '新兴线上零售商，主打"整备好"的车辆',
-    type: 'online_retailer',
-    features: ['quality_assurance', 'vehicle_preparation', 'home_delivery'],
-    search_template: 'https://www.brickandmotor.ca/inventory/{make}/{model}/'
+  
+  audi: {
+    name: { en: 'Audi', zh: '奥迪' },
+    country: 'Germany',
+    reliability: 8.2,
+    price_range: { min: 40000, max: 180000 },
+    popular_models: ['A3', 'A4', 'A6', 'Q5', 'Q7']
   },
-  AUTOTEMPEST: {
-    name: 'AutoTempest',
-    url: 'https://www.autotempest.com/',
-    description: '聚合搜索平台，可同时搜索多个网站（Autotrader/eBay/Kijiji等）',
-    type: 'aggregator',
-    features: ['multi_site_search', 'price_comparison', 'alert_system'],
-    search_template: 'https://www.autotempest.com/results/?make={make}&model={model}&zip=Canada'
+  
+  volkswagen: {
+    name: { en: 'Volkswagen', zh: '大众' },
+    country: 'Germany',
+    reliability: 8.0,
+    price_range: { min: 25000, max: 80000 },
+    popular_models: ['Jetta', 'Passat', 'Tiguan', 'Atlas', 'ID.4']
   },
-  EBAY_MOTORS: {
-    name: 'eBay Motors Canada',
-    url: 'https://www.ebay.ca/b/Cars-Trucks/6001/bn_1865117',
-    description: 'eBay Motors加拿大站，个人卖家较少，但偶尔能淘到车',
-    type: 'auction',
-    features: ['auction_format', 'buy_it_now', 'unique_finds'],
-    search_template: 'https://www.ebay.ca/sch/Cars-Trucks/6001/i.html?_nkw={make}+{model}'
+  
+  // 美系品牌
+  ford: {
+    name: { en: 'Ford', zh: '福特' },
+    country: 'USA',
+    reliability: 8.1,
+    price_range: { min: 22000, max: 90000 },
+    popular_models: ['F-150', 'Escape', 'Explorer', 'Mustang', 'Bronco']
+  },
+  
+  chevrolet: {
+    name: { en: 'Chevrolet', zh: '雪佛兰' },
+    country: 'USA',
+    reliability: 8.0,
+    price_range: { min: 20000, max: 85000 },
+    popular_models: ['Silverado', 'Equinox', 'Tahoe', 'Camaro', 'Bolt']
+  },
+  
+  // 韩系品牌
+  hyundai: {
+    name: { en: 'Hyundai', zh: '现代' },
+    country: 'South Korea',
+    reliability: 8.6,
+    price_range: { min: 18000, max: 70000 },
+    popular_models: ['Elantra', 'Sonata', 'Tucson', 'Santa Fe', 'Ioniq']
+  },
+  
+  kia: {
+    name: { en: 'Kia', zh: '起亚' },
+    country: 'South Korea',
+    reliability: 8.4,
+    price_range: { min: 18000, max: 65000 },
+    popular_models: ['Forte', 'Optima', 'Sportage', 'Sorento', 'EV6']
   }
-} as const;
+};
 
-// 拍卖平台配置
-export const AUCTION_PLATFORMS = {
-  COPART: {
-    name: 'Copart Canada',
-    url: 'https://www.copart.ca/',
-    description: 'Copart，加拿大事故车/修复车拍卖平台，适合懂车的人',
-    type: 'salvage_auction',
-    features: ['salvage_vehicles', 'damaged_cars', 'professional_buyers'],
-    registration_required: true,
-    target_audience: 'experienced_buyers'
+/**
+ * 汽车类型分类
+ */
+export const CAR_TYPES = {
+  sedan: {
+    name: { en: 'Sedan', zh: '轿车' },
+    description: { en: 'Four-door passenger car with separate trunk', zh: '四门乘用车，独立后备箱' },
+    characteristics: ['fuel_efficient', 'comfortable', 'practical'],
+    price_range: { min: 20000, max: 80000 }
   },
-  ADESA: {
-    name: 'ADESA Canada',
-    url: 'https://www.adesa.ca/',
-    description: 'Adesa，加拿大大型汽车拍卖平台，主要供经销商使用',
-    type: 'dealer_auction',
-    features: ['dealer_only', 'wholesale_pricing', 'fleet_vehicles'],
-    registration_required: true,
-    dealer_license_required: true
+  
+  suv: {
+    name: { en: 'SUV', zh: 'SUV' },
+    description: { en: 'Sport Utility Vehicle with higher ground clearance', zh: '运动型多功能车，离地间隙较高' },
+    characteristics: ['spacious', 'versatile', 'all_weather'],
+    price_range: { min: 25000, max: 100000 }
   },
-  GOVDEALS: {
-    name: 'GovDeals Canada',
-    url: 'https://www.govdeals.ca/',
-    description: '政府及机构车辆拍卖平台，能找到退役警车/公务车',
-    type: 'government_auction',
-    features: ['government_vehicles', 'police_cars', 'fleet_vehicles'],
-    registration_required: true,
-    target_audience: 'general_public'
+  
+  hatchback: {
+    name: { en: 'Hatchback', zh: '掀背车' },
+    description: { en: 'Compact car with rear door that includes the window', zh: '紧凑型车，后门包含车窗' },
+    characteristics: ['compact', 'fuel_efficient', 'easy_parking'],
+    price_range: { min: 18000, max: 50000 }
+  },
+  
+  coupe: {
+    name: { en: 'Coupe', zh: '双门跑车' },
+    description: { en: 'Two-door car with sporty design', zh: '两门车，运动型设计' },
+    characteristics: ['sporty', 'stylish', 'performance'],
+    price_range: { min: 30000, max: 120000 }
+  },
+  
+  truck: {
+    name: { en: 'Truck', zh: '卡车' },
+    description: { en: 'Vehicle designed for carrying cargo', zh: '设计用于载货的车辆' },
+    characteristics: ['powerful', 'practical', 'towing'],
+    price_range: { min: 35000, max: 120000 }
   }
-} as const;
+};
 
-// 车辆信息工具配置
-export const VEHICLE_INFO_TOOLS = {
-  KBB_CANADA: {
-    name: 'Kelley Blue Book Canada',
-    url: 'https://www.kbb.ca/',
-    description: 'Kelley Blue Book Canada，车辆估值工具，买车前查行情',
-    type: 'valuation',
-    features: ['vehicle_valuation', 'market_analysis', 'trade_in_value'],
-    free_tier: true,
-    api_available: false
+/**
+ * 价格范围分类
+ */
+export const PRICE_RANGES = {
+  budget: {
+    name: { en: 'Budget', zh: '经济型' },
+    range: { min: 15000, max: 30000 },
+    description: { en: 'Affordable entry-level vehicles', zh: '经济实惠的入门级车辆' }
   },
-  CARFAX_CANADA: {
-    name: 'CARFAX Canada',
-    url: 'https://www.carfax.ca/',
-    description: 'CARFAX Canada，车辆历史报告，查询事故/保养/贷款记录',
-    type: 'history_report',
-    features: ['accident_history', 'service_records', 'lien_check', 'ownership_history'],
-    free_tier: false,
-    api_available: true,
-    cost_per_report: 39.99
+  
+  mid_range: {
+    name: { en: 'Mid-Range', zh: '中档' },
+    range: { min: 30000, max: 60000 },
+    description: { en: 'Balanced features and value', zh: '功能与价值平衡' }
+  },
+  
+  luxury: {
+    name: { en: 'Luxury', zh: '豪华' },
+    range: { min: 60000, max: 150000 },
+    description: { en: 'Premium features and comfort', zh: '高端功能和舒适性' }
+  },
+  
+  ultra_luxury: {
+    name: { en: 'Ultra Luxury', zh: '超豪华' },
+    range: { min: 150000, max: 500000 },
+    description: { en: 'Exclusive high-end vehicles', zh: '专属高端车辆' }
   }
-} as const;
+};
 
-// 金融服务配置
-export const FINANCIAL_SERVICES = {
-  BANKS: {
-    RBC: {
-      name: 'RBC Royal Bank',
-      url: 'https://www.rbcroyalbank.com/personal/loans/auto-loans.html',
-      description: 'RBC汽车贷款，利率竞争力强',
-      features: ['auto_loans', 'lease_options', 'online_application']
-    },
-    TD: {
-      name: 'TD Canada Trust',
-      url: 'https://www.td.com/ca/en/personal-banking/personal-loans/auto-loans',
-      description: 'TD汽车贷款，审批快速',
-      features: ['auto_loans', 'pre_approval', 'flexible_terms']
-    },
-    SCOTIABANK: {
-      name: 'Scotiabank',
-      url: 'https://www.scotiabank.com/ca/en/personal/loans/auto-loans.html',
-      description: 'Scotiabank汽车贷款，多种选择',
-      features: ['auto_loans', 'new_used_cars', 'competitive_rates']
-    }
+/**
+ * 燃料类型
+ */
+export const FUEL_TYPES = {
+  gasoline: {
+    name: { en: 'Gasoline', zh: '汽油' },
+    description: { en: 'Traditional internal combustion engine', zh: '传统内燃机' },
+    pros: ['widely_available', 'proven_technology', 'lower_initial_cost'],
+    cons: ['emissions', 'fuel_costs', 'maintenance']
   },
-  CREDIT_UNIONS: {
-    DESJARDINS: {
-      name: 'Desjardins',
-      url: 'https://www.desjardins.com/ca/personal/loans/auto-loans/',
-      description: 'Desjardins汽车贷款，魁北克地区优势',
-      features: ['auto_loans', 'member_benefits', 'local_service']
-    }
+  
+  hybrid: {
+    name: { en: 'Hybrid', zh: '混合动力' },
+    description: { en: 'Combines gasoline engine with electric motor', zh: '汽油发动机与电动机结合' },
+    pros: ['fuel_efficient', 'lower_emissions', 'tax_incentives'],
+    cons: ['higher_initial_cost', 'battery_replacement']
   },
-  FINANCE_COMPANIES: {
-    GM_FINANCIAL: {
-      name: 'GM Financial',
-      url: 'https://www.gmfinancial.ca/',
-      description: 'GM Financial，通用汽车金融服务',
-      features: ['gm_vehicles', 'lease_programs', 'special_offers']
-    },
-    FORD_CREDIT: {
-      name: 'Ford Credit',
-      url: 'https://www.ford.ca/financing/',
-      description: 'Ford Credit，福特汽车金融服务',
-      features: ['ford_vehicles', 'financing_options', 'incentives']
-    }
+  
+  electric: {
+    name: { en: 'Electric', zh: '电动' },
+    description: { en: 'Fully electric vehicle with battery', zh: '完全电动车辆，使用电池' },
+    pros: ['zero_emissions', 'low_operating_cost', 'quiet'],
+    cons: ['charging_infrastructure', 'range_anxiety', 'battery_degradation']
+  },
+  
+  diesel: {
+    name: { en: 'Diesel', zh: '柴油' },
+    description: { en: 'Diesel engine for better fuel economy', zh: '柴油发动机，燃油经济性更好' },
+    pros: ['fuel_efficient', 'torque', 'long_range'],
+    cons: ['emissions', 'higher_fuel_cost', 'maintenance']
   }
-} as const;
+};
 
-// 保险服务配置
-export const INSURANCE_SERVICES = {
-  MAJOR_INSURERS: {
-    INTACT: {
-      name: 'Intact Insurance',
-      url: 'https://www.intact.ca/',
-      description: 'Intact保险，加拿大最大财产保险公司',
-      features: ['auto_insurance', 'online_quotes', 'claims_service']
-    },
-    TD_INSURANCE: {
-      name: 'TD Insurance',
-      url: 'https://www.tdinsurance.com/',
-      description: 'TD保险，银行背景，服务全面',
-      features: ['auto_insurance', 'multi_policy_discounts', 'online_management']
-    },
-    DESJARDINS_INSURANCE: {
-      name: 'Desjardins Insurance',
-      url: 'https://www.desjardins.com/ca/personal/insurance/auto/',
-      description: 'Desjardins保险，魁北克地区优势',
-      features: ['auto_insurance', 'member_benefits', 'local_service']
-    }
+/**
+ * 安全评级
+ */
+export const SAFETY_RATINGS = {
+  excellent: {
+    name: { en: 'Excellent', zh: '优秀' },
+    score: { min: 9.0, max: 10.0 },
+    description: { en: 'Top safety performance', zh: '顶级安全性能' }
   },
-  COMPARISON_SITES: {
-    RATESDOTCA: {
-      name: 'Rates.ca',
-      url: 'https://www.rates.ca/',
-      description: 'Rates.ca，保险比较网站',
-      features: ['quote_comparison', 'multiple_insurers', 'online_quotes']
-    },
-    KANETIX: {
-      name: 'Kanetix',
-      url: 'https://www.kanetix.ca/',
-      description: 'Kanetix，保险比较平台',
-      features: ['insurance_comparison', 'instant_quotes', 'savings_calculator']
-    }
+  
+  good: {
+    name: { en: 'Good', zh: '良好' },
+    score: { min: 7.0, max: 8.9 },
+    description: { en: 'Solid safety performance', zh: '可靠的安全性能' }
+  },
+  
+  average: {
+    name: { en: 'Average', zh: '一般' },
+    score: { min: 5.0, max: 6.9 },
+    description: { en: 'Acceptable safety performance', zh: '可接受的安全性能' }
+  },
+  
+  poor: {
+    name: { en: 'Poor', zh: '较差' },
+    score: { min: 0.0, max: 4.9 },
+    description: { en: 'Below average safety performance', zh: '低于平均水平的安全性能' }
   }
-} as const;
+};
 
-// 资源类型定义
-export type PlatformType = 'marketplace' | 'online_retailer' | 'classified' | 'aggregator' | 'auction' | 'salvage_auction' | 'dealer_auction' | 'government_auction' | 'valuation' | 'history_report';
+/**
+ * 加拿大省份和地区
+ */
+export const CANADIAN_PROVINCES = {
+  ontario: {
+    name: { en: 'Ontario', zh: '安大略省' },
+    code: 'ON',
+    major_cities: ['Toronto', 'Ottawa', 'Hamilton', 'London', 'Windsor']
+  },
+  
+  quebec: {
+    name: { en: 'Quebec', zh: '魁北克省' },
+    code: 'QC',
+    major_cities: ['Montreal', 'Quebec City', 'Laval', 'Gatineau', 'Longueuil']
+  },
+  
+  british_columbia: {
+    name: { en: 'British Columbia', zh: '不列颠哥伦比亚省' },
+    code: 'BC',
+    major_cities: ['Vancouver', 'Victoria', 'Surrey', 'Burnaby', 'Richmond']
+  },
+  
+  alberta: {
+    name: { en: 'Alberta', zh: '阿尔伯塔省' },
+    code: 'AB',
+    major_cities: ['Calgary', 'Edmonton', 'Red Deer', 'Lethbridge', 'St. Albert']
+  },
+  
+  manitoba: {
+    name: { en: 'Manitoba', zh: '马尼托巴省' },
+    code: 'MB',
+    major_cities: ['Winnipeg', 'Brandon', 'Steinbach', 'Thompson', 'Portage la Prairie']
+  },
+  
+  saskatchewan: {
+    name: { en: 'Saskatchewan', zh: '萨斯喀彻温省' },
+    code: 'SK',
+    major_cities: ['Saskatoon', 'Regina', 'Prince Albert', 'Moose Jaw', 'Swift Current']
+  },
+  
+  nova_scotia: {
+    name: { en: 'Nova Scotia', zh: '新斯科舍省' },
+    code: 'NS',
+    major_cities: ['Halifax', 'Sydney', 'Dartmouth', 'Truro', 'New Glasgow']
+  },
+  
+  new_brunswick: {
+    name: { en: 'New Brunswick', zh: '新不伦瑞克省' },
+    code: 'NB',
+    major_cities: ['Moncton', 'Saint John', 'Fredericton', 'Dieppe', 'Riverview']
+  },
+  
+  newfoundland: {
+    name: { en: 'Newfoundland and Labrador', zh: '纽芬兰和拉布拉多省' },
+    code: 'NL',
+    major_cities: ['St. John\'s', 'Mount Pearl', 'Conception Bay South', 'Corner Brook', 'Grand Falls-Windsor']
+  },
+  
+  prince_edward_island: {
+    name: { en: 'Prince Edward Island', zh: '爱德华王子岛省' },
+    code: 'PE',
+    major_cities: ['Charlottetown', 'Summerside', 'Stratford', 'Cornwall', 'Montague']
+  }
+};
 
-export interface CarResource {
-  name: string;
-  url: string;
-  description: string;
-  type: PlatformType;
-  features: readonly string[];
-  search_template?: string;
-  registration_required?: boolean;
-  dealer_license_required?: boolean;
-  target_audience?: string;
-  free_tier?: boolean;
-  api_available?: boolean;
-  cost_per_report?: number;
+/**
+ * 汽车功能特性
+ */
+export const CAR_FEATURES = {
+  safety: [
+    'airbags', 'abs', 'traction_control', 'stability_control', 'blind_spot_monitoring',
+    'lane_departure_warning', 'forward_collision_warning', 'automatic_emergency_braking',
+    'rear_view_camera', 'parking_sensors'
+  ],
+  
+  comfort: [
+    'leather_seats', 'heated_seats', 'ventilated_seats', 'power_seats', 'memory_seats',
+    'climate_control', 'dual_zone_ac', 'sunroof', 'moonroof', 'premium_audio'
+  ],
+  
+  technology: [
+    'touchscreen', 'navigation', 'bluetooth', 'usb_ports', 'wireless_charging',
+    'apple_carplay', 'android_auto', 'wifi_hotspot', 'voice_control', 'head_up_display'
+  ],
+  
+  performance: [
+    'turbo_engine', 'all_wheel_drive', 'four_wheel_drive', 'sport_mode', 'paddle_shifters',
+    'performance_brakes', 'sport_suspension', 'limited_slip_differential'
+  ]
+};
+
+/**
+ * 获取品牌信息
+ */
+export function getBrandInfo(brandKey: string) {
+  return CAR_BRANDS[brandKey as keyof typeof CAR_BRANDS];
 }
 
 /**
- * 根据用户需求推荐相关网站
+ * 获取车型信息
  */
-export function getRecommendedPlatforms(userPreferences: {
-  budget: 'low' | 'medium' | 'high';
-  experience: 'beginner' | 'intermediate' | 'expert';
-  buying_preference: 'dealer' | 'private' | 'any';
-}): CarResource[] {
-  const recommendations: CarResource[] = [];
+export function getCarTypeInfo(typeKey: string) {
+  return CAR_TYPES[typeKey as keyof typeof CAR_TYPES];
+}
 
-  // 基于预算推荐平台
-  if (userPreferences.budget === 'low') {
-    recommendations.push(
-      USED_CAR_PLATFORMS.KIJIJI,
-      USED_CAR_PLATFORMS.FACEBOOK_MARKETPLACE,
-      AUCTION_PLATFORMS.GOVDEALS
-    );
-  } else if (userPreferences.budget === 'medium') {
-    recommendations.push(
-      USED_CAR_PLATFORMS.AUTOTRADER,
-      USED_CAR_PLATFORMS.CARGURUS,
-      USED_CAR_PLATFORMS.CARPAGES
-    );
-  } else {
-    recommendations.push(
-      USED_CAR_PLATFORMS.CLUTCH,
-      USED_CAR_PLATFORMS.CANADA_DRIVES,
-      USED_CAR_PLATFORMS.BRICK_AND_MOTOR
-    );
+/**
+ * 获取价格范围信息
+ */
+export function getPriceRangeInfo(priceKey: string) {
+  return PRICE_RANGES[priceKey as keyof typeof PRICE_RANGES];
+}
+
+/**
+ * 获取燃料类型信息
+ */
+export function getFuelTypeInfo(fuelKey: string) {
+  return FUEL_TYPES[fuelKey as keyof typeof FUEL_TYPES];
+}
+
+/**
+ * 根据价格获取价格范围
+ */
+export function getPriceRangeByValue(price: number): string {
+  for (const [key, range] of Object.entries(PRICE_RANGES)) {
+    if (price >= range.range.min && price <= range.range.max) {
+      return key;
+    }
   }
+  return 'unknown';
+}
 
-  // 基于经验推荐
-  if (userPreferences.experience === 'expert') {
-    recommendations.push(AUCTION_PLATFORMS.COPART);
-  }
+/**
+ * 获取所有品牌列表
+ */
+export function getAllBrands(): Array<{ key: string; name: { en: string; zh: string } }> {
+  return Object.entries(CAR_BRANDS).map(([key, brand]) => ({
+    key,
+    name: brand.name
+  }));
+}
 
-  // 总是推荐信息工具
-  recommendations.push(
-    VEHICLE_INFO_TOOLS.KBB_CANADA,
-    VEHICLE_INFO_TOOLS.CARFAX_CANADA
+/**
+ * 获取所有车型列表
+ */
+export function getAllCarTypes(): Array<{ key: string; name: { en: string; zh: string } }> {
+  return Object.entries(CAR_TYPES).map(([key, type]) => ({
+    key,
+    name: type.name
+  }));
+}
+
+/**
+ * 搜索品牌
+ */
+export function searchBrands(query: string): Array<{ key: string; name: { en: string; zh: string } }> {
+  const lowerQuery = query.toLowerCase();
+  return getAllBrands().filter(brand => 
+    brand.name.en.toLowerCase().includes(lowerQuery) ||
+    brand.name.zh.includes(query)
   );
-
-  return recommendations;
 }
 
 /**
- * 生成搜索链接
+ * 搜索车型
  */
-export function generateSearchLinks(make: string, model: string): Record<string, string> {
-  const links: Record<string, string> = {};
-  
-  Object.entries(USED_CAR_PLATFORMS).forEach(([key, platform]) => {
-    if (platform.search_template) {
-      links[key] = platform.search_template
-        .replace('{make}', encodeURIComponent(make.toLowerCase()))
-        .replace('{model}', encodeURIComponent(model.toLowerCase()));
-    }
-  });
-
-  return links;
-}
-
-/**
- * 获取所有平台类型
- */
-export function getAllPlatformTypes(): PlatformType[] {
-  return [
-    'marketplace',
-    'online_retailer', 
-    'classified',
-    'aggregator',
-    'auction',
-    'salvage_auction',
-    'dealer_auction',
-    'government_auction',
-    'valuation',
-    'history_report'
-  ];
-}
-
-/**
- * 根据平台类型筛选资源
- */
-export function getResourcesByType(type: PlatformType): CarResource[] {
-  const allResources: CarResource[] = [
-    ...Object.values(USED_CAR_PLATFORMS),
-    ...Object.values(AUCTION_PLATFORMS),
-    ...Object.values(VEHICLE_INFO_TOOLS)
-  ];
-  
-  return allResources.filter(resource => resource.type === type);
-}
-
-/**
- * 获取免费资源
- */
-export function getFreeResources(): CarResource[] {
-  const allResources: CarResource[] = [
-    ...Object.values(USED_CAR_PLATFORMS),
-    ...Object.values(AUCTION_PLATFORMS),
-    ...Object.values(VEHICLE_INFO_TOOLS)
-  ];
-  
-  return allResources.filter(resource => resource.free_tier === true);
-}
-
-/**
- * 获取需要注册的资源
- */
-export function getRegistrationRequiredResources(): CarResource[] {
-  const allResources: CarResource[] = [
-    ...Object.values(USED_CAR_PLATFORMS),
-    ...Object.values(AUCTION_PLATFORMS),
-    ...Object.values(VEHICLE_INFO_TOOLS)
-  ];
-  
-  return allResources.filter(resource => resource.registration_required === true);
+export function searchCarTypes(query: string): Array<{ key: string; name: { en: string; zh: string } }> {
+  const lowerQuery = query.toLowerCase();
+  return getAllCarTypes().filter(type => 
+    type.name.en.toLowerCase().includes(lowerQuery) ||
+    type.name.zh.includes(query)
+  );
 }

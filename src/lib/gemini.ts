@@ -1,57 +1,30 @@
 /**
  * Google Gemini AI 客户端
  * 提供 AI 对话、车型推荐、摘要生成等功能
+ * 作为 GROQ 的备用方案
  */
 
-import { GoogleGenerativeAI, GenerativeModel, ChatSession } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ChatMessage, Language, BilingualText, CarRecommendation, NextStep } from '@/types';
 
 // 确保环境变量正确加载
 import dotenv from 'dotenv';
 import path from 'path';
 
-// 使用绝对路径确保找到 .env.local 文件
 const envPath = path.resolve(process.cwd(), '.env.local');
 dotenv.config({ path: envPath });
 
-// 严格的环境变量处理 - 完全禁止 fallback 模式
-function requireGeminiApiKey(): string {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('Missing required environment variable: GOOGLE_GEMINI_API_KEY');
-  }
-  return apiKey;
-}
+// Gemini 配置
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Gemini 配置 - 使用严格模式
-const GEMINI_API_KEY = requireGeminiApiKey();
+// 验证API密钥
+if (!GEMINI_API_KEY) {
+  throw new Error('GEMINI_API_KEY environment variable is required');
+}
 
 // 初始化 Gemini AI
-export const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-// 模型配置
-const MODEL_NAME = 'gemini-2.5-flash';
-const GENERATION_CONFIG = {
-  temperature: 0.7,
-  topK: 40,
-  topP: 0.95,
-  maxOutputTokens: 2048,
-};
-
-/**
- * 创建聊天会话
- */
-export function createChatSession(): ChatSession {
-  const model = genAI.getGenerativeModel({ 
-    model: MODEL_NAME,
-    generationConfig: GENERATION_CONFIG,
-  });
-  
-  return model.startChat({
-    history: [],
-    generationConfig: GENERATION_CONFIG,
-  });
-}
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 /**
  * 生成聊天响应
@@ -68,13 +41,11 @@ export async function generateChatResponse(
   next_steps: NextStep[];
 }> {
   try {
-    const session = createChatSession();
-    
     // 构建提示词
     const prompt = buildChatPrompt(messages, language);
     
     // 发送请求
-    const result = await session.sendMessage(prompt);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -101,13 +72,11 @@ export async function generateCarRecommendation(
   next_steps: NextStep[];
 }> {
   try {
-    const session = createChatSession();
-    
     // 构建车型推荐提示词
     const prompt = buildCarRecommendationPrompt(userMessage, language);
     
     // 发送请求
-    const result = await session.sendMessage(prompt);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -130,13 +99,11 @@ export async function generateConversationSummary(
   language: Language
 ): Promise<BilingualText> {
   try {
-    const session = createChatSession();
-    
     // 构建摘要提示词
     const prompt = buildSummaryPrompt(messages, language);
     
     // 发送请求
-    const result = await session.sendMessage(prompt);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -152,14 +119,11 @@ export async function generateConversationSummary(
  * 构建聊天提示词
  */
 function buildChatPrompt(messages: ChatMessage[], language: Language): string {
-  const systemPrompt = getSystemPrompt(language);
   const conversationHistory = messages
     .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
     .join('\n');
   
-  return `${systemPrompt}
-
-对话历史：
+  return `对话历史：
 ${conversationHistory}
 
 请基于以上对话历史，提供有用的汽车购买建议。`;
@@ -169,11 +133,7 @@ ${conversationHistory}
  * 构建车型推荐提示词
  */
 function buildCarRecommendationPrompt(userMessage: string, language: Language): string {
-  const systemPrompt = getSystemPrompt(language);
-  
-  return `${systemPrompt}
-
-用户需求：${userMessage}
+  return `用户需求：${userMessage}
 
 请基于用户需求提供个性化的汽车推荐。`;
 }
@@ -362,10 +322,9 @@ function parseSummaryResponse(response: string): BilingualText {
  */
 export async function healthCheck(): Promise<boolean> {
   try {
-    const session = createChatSession();
-    const result = await session.sendMessage('Hello');
-    await result.response;
-    return true;
+    const result = await model.generateContent('Hello');
+    const response = await result.response;
+    return response.text() ? true : false;
   } catch (error) {
     console.error('Gemini health check failed:', error);
     return false;
