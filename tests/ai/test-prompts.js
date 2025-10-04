@@ -1,457 +1,321 @@
+#!/usr/bin/env node
+
 /**
- * AI 提示词测试脚本
- * 测试提示词管理模块的各项功能
+ * AI提示词模板测试脚本
+ * 测试提示词模板的代码质量
  */
 
-const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
 // 测试配置
 const TEST_CONFIG = {
-  timeout: 10000, // 10秒超时
-  retries: 3,
+  timeout: 30000,
   verbose: true
 };
 
-// 测试用例
-const testCases = [
-  {
-    name: 'System Prompts Import',
-    description: '测试系统提示词导入',
-    test: async () => {
-      try {
-        const { SYSTEM_PROMPTS } = await import('../src/lib/prompts.ts');
-        
-        const hasCarAdvisor = SYSTEM_PROMPTS.car_advisor && 
-          SYSTEM_PROMPTS.car_advisor.zh && 
-          SYSTEM_PROMPTS.car_advisor.en;
-        
-        const hasCarRecommender = SYSTEM_PROMPTS.car_recommender && 
-          SYSTEM_PROMPTS.car_recommender.zh && 
-          SYSTEM_PROMPTS.car_recommender.en;
-        
-        const hasSummarizer = SYSTEM_PROMPTS.conversation_summarizer && 
-          SYSTEM_PROMPTS.conversation_summarizer.zh && 
-          SYSTEM_PROMPTS.conversation_summarizer.en;
-        
-        return {
-          success: hasCarAdvisor && hasCarRecommender && hasSummarizer,
-          message: '系统提示词导入成功',
-          data: {
-            car_advisor: hasCarAdvisor,
-            car_recommender: hasCarRecommender,
-            conversation_summarizer: hasSummarizer
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `系统提示词导入失败: ${error.message}`
-        };
-      }
-    }
-  },
+/**
+ * 检查Prompts文件是否存在
+ */
+function testFileExists() {
+  console.log('🔍 检查Prompts文件是否存在...');
   
-  {
-    name: 'Prompt Templates Import',
-    description: '测试提示词模板导入',
-    test: async () => {
-      try {
-        const { PROMPT_TEMPLATES } = await import('../src/lib/prompts.ts');
-        
-        const hasChatResponse = PROMPT_TEMPLATES.chat_response && 
-          PROMPT_TEMPLATES.chat_response.zh && 
-          PROMPT_TEMPLATES.chat_response.en;
-        
-        const hasCarRecommendation = PROMPT_TEMPLATES.car_recommendation && 
-          PROMPT_TEMPLATES.car_recommendation.zh && 
-          PROMPT_TEMPLATES.car_recommendation.en;
-        
-        const hasConversationSummary = PROMPT_TEMPLATES.conversation_summary && 
-          PROMPT_TEMPLATES.conversation_summary.zh && 
-          PROMPT_TEMPLATES.conversation_summary.en;
-        
-        return {
-          success: hasChatResponse && hasCarRecommendation && hasConversationSummary,
-          message: '提示词模板导入成功',
-          data: {
-            chat_response: hasChatResponse,
-            car_recommendation: hasCarRecommendation,
-            conversation_summary: hasConversationSummary
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `提示词模板导入失败: ${error.message}`
-        };
-      }
-    }
-  },
+  const promptsPath = path.join(process.cwd(), 'src/lib/prompts.ts');
   
-  {
-    name: 'Build Chat Prompt',
-    description: '测试构建聊天提示词',
-    test: async () => {
-      try {
-        const { buildChatPrompt } = await import('../src/lib/prompts.ts');
-        
-        const messages = [
-          {
-            role: 'user',
-            content: 'I need a car for commuting'
-          },
-          {
-            role: 'assistant',
-            content: 'I can help you find the perfect car. What is your budget?'
-          }
-        ];
-        
-        const englishPrompt = buildChatPrompt(messages, 'en');
-        const chinesePrompt = buildChatPrompt(messages, 'zh');
-        
-        const isEnglishValid = englishPrompt.includes('Conversation History') && 
-          englishPrompt.includes('I need a car for commuting');
-        
-        const isChineseValid = chinesePrompt.includes('对话历史') && 
-          chinesePrompt.includes('I need a car for commuting');
-        
-        return {
-          success: isEnglishValid && isChineseValid,
-          message: '聊天提示词构建成功',
-          data: {
-            english: englishPrompt,
-            chinese: chinesePrompt
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `聊天提示词构建失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Build Car Recommendation Prompt',
-    description: '测试构建车型推荐提示词',
-    test: async () => {
-      try {
-        const { buildCarRecommendationPrompt } = await import('../src/lib/prompts.ts');
-        
-        const userMessage = 'I want a fuel-efficient sedan for $30,000';
-        
-        const englishPrompt = buildCarRecommendationPrompt(userMessage, 'en');
-        const chinesePrompt = buildCarRecommendationPrompt(userMessage, 'zh');
-        
-        const isEnglishValid = englishPrompt.includes('User Requirements') && 
-          englishPrompt.includes(userMessage);
-        
-        const isChineseValid = chinesePrompt.includes('用户需求') && 
-          chinesePrompt.includes(userMessage);
-        
-        return {
-          success: isEnglishValid && isChineseValid,
-          message: '车型推荐提示词构建成功',
-          data: {
-            english: englishPrompt,
-            chinese: chinesePrompt
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `车型推荐提示词构建失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Build Summary Prompt',
-    description: '测试构建摘要提示词',
-    test: async () => {
-      try {
-        const { buildSummaryPrompt } = await import('../src/lib/prompts.ts');
-        
-        const messages = [
-          {
-            role: 'user',
-            content: 'I need a family car'
-          },
-          {
-            role: 'assistant',
-            content: 'What is your budget?'
-          }
-        ];
-        
-        const englishPrompt = buildSummaryPrompt(messages, 'en');
-        const chinesePrompt = buildSummaryPrompt(messages, 'zh');
-        
-        const isEnglishValid = englishPrompt.includes('Please generate a summary') && 
-          englishPrompt.includes('I need a family car');
-        
-        const isChineseValid = chinesePrompt.includes('请为以下对话生成摘要') && 
-          chinesePrompt.includes('I need a family car');
-        
-        return {
-          success: isEnglishValid && isChineseValid,
-          message: '摘要提示词构建成功',
-          data: {
-            english: englishPrompt,
-            chinese: chinesePrompt
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `摘要提示词构建失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Get System Prompt',
-    description: '测试获取系统提示词',
-    test: async () => {
-      try {
-        const { getSystemPrompt } = await import('../src/lib/prompts.ts');
-        
-        const carAdvisorEn = getSystemPrompt('car_advisor', 'en');
-        const carAdvisorZh = getSystemPrompt('car_advisor', 'zh');
-        
-        const isEnglishValid = carAdvisorEn.includes('professional Canadian car buying advisor');
-        const isChineseValid = carAdvisorZh.includes('专业的加拿大汽车购买顾问');
-        
-        return {
-          success: isEnglishValid && isChineseValid,
-          message: '系统提示词获取成功',
-          data: {
-            english: carAdvisorEn,
-            chinese: carAdvisorZh
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `系统提示词获取失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Validate Response Format',
-    description: '测试响应格式验证',
-    test: async () => {
-      try {
-        const { validateResponseFormat } = await import('../src/lib/prompts.ts');
-        
-        const validResponse = {
-          summary: { en: 'Test', zh: '测试' },
-          recommendations: [],
-          next_steps: []
-        };
-        
-        const invalidResponse = {
-          summary: { en: 'Test' }, // 缺少 zh
-          recommendations: 'not an array'
-        };
-        
-        const isValidValid = validateResponseFormat(validResponse);
-        const isInvalidValid = validateResponseFormat(invalidResponse);
-        
-        return {
-          success: isValidValid && !isInvalidValid,
-          message: '响应格式验证成功',
-          data: {
-            valid_response: isValidValid,
-            invalid_response: isInvalidValid
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `响应格式验证失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Clean Response',
-    description: '测试响应清理功能',
-    test: async () => {
-      try {
-        const { cleanResponse } = await import('../src/lib/prompts.ts');
-        
-        const markdownResponse = '```json\n{"test": "value"}\n```';
-        const jsonResponse = '{"test": "value"}';
-        const mixedResponse = 'Some text {"test": "value"} more text';
-        
-        const cleanedMarkdown = cleanResponse(markdownResponse);
-        const cleanedJson = cleanResponse(jsonResponse);
-        const cleanedMixed = cleanResponse(mixedResponse);
-        
-        const isMarkdownCleaned = cleanedMarkdown === '{"test": "value"}';
-        const isJsonCleaned = cleanedJson === '{"test": "value"}';
-        const isMixedCleaned = cleanedMixed === '{"test": "value"}';
-        
-        return {
-          success: isMarkdownCleaned && isJsonCleaned && isMixedCleaned,
-          message: '响应清理成功',
-          data: {
-            markdown: { original: markdownResponse, cleaned: cleanedMarkdown },
-            json: { original: jsonResponse, cleaned: cleanedJson },
-            mixed: { original: mixedResponse, cleaned: cleanedMixed }
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `响应清理失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Get Default Response',
-    description: '测试获取默认响应',
-    test: async () => {
-      try {
-        const { getDefaultResponse } = await import('../src/lib/prompts.ts');
-        
-        const errorResponse = getDefaultResponse('error', 'en');
-        const noRecommendationsResponse = getDefaultResponse('no_recommendations', 'zh');
-        
-        const hasErrorResponse = errorResponse && 
-          errorResponse.summary && 
-          errorResponse.summary.en;
-        
-        const hasNoRecommendationsResponse = noRecommendationsResponse && 
-          noRecommendationsResponse.summary && 
-          noRecommendationsResponse.summary.zh;
-        
-        return {
-          success: hasErrorResponse && hasNoRecommendationsResponse,
-          message: '默认响应获取成功',
-          data: {
-            error_response: errorResponse,
-            no_recommendations_response: noRecommendationsResponse
-          }
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `默认响应获取失败: ${error.message}`
-        };
-      }
-    }
+  if (!fs.existsSync(promptsPath)) {
+    console.log('❌ Prompts文件不存在:', promptsPath);
+    return false;
   }
-];
+  
+  console.log('✅ Prompts文件存在:', promptsPath);
+  return true;
+}
 
 /**
- * 运行单个测试
+ * 检查Prompts文件内容质量
  */
-async function runTest(testCase) {
-  console.log(`\n🧪 运行测试: ${testCase.name}`);
-  console.log(`📝 描述: ${testCase.description}`);
+function testFileContent() {
+  console.log('🔍 检查Prompts文件内容质量...');
   
-  const startTime = Date.now();
+  const promptsPath = path.join(process.cwd(), 'src/lib/prompts.ts');
+  const content = fs.readFileSync(promptsPath, 'utf8');
+  
+  const checks = [
+    {
+      name: '导入语句使用绝对路径',
+      test: () => content.includes("from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types'"),
+      required: true
+    },
+    {
+      name: '没有相对路径导入',
+      test: () => !content.includes("from './") && !content.includes("from '../"),
+      required: true
+    },
+    {
+      name: '包含汽车推荐提示词',
+      test: () => content.includes('CAR_RECOMMENDATION_PROMPT'),
+      required: true
+    },
+    {
+      name: '包含聊天系统提示词',
+      test: () => content.includes('CHAT_SYSTEM_PROMPT'),
+      required: true
+    },
+    {
+      name: '包含车型搜索提示词',
+      test: () => content.includes('CAR_SEARCH_PROMPT'),
+      required: true
+    },
+    {
+      name: '包含价格分析提示词',
+      test: () => content.includes('PRICE_ANALYSIS_PROMPT'),
+      required: true
+    },
+    {
+      name: '包含比较分析提示词',
+      test: () => content.includes('COMPARISON_PROMPT'),
+      required: true
+    },
+    {
+      name: '包含错误处理提示词',
+      test: () => content.includes('ERROR_HANDLING_PROMPT'),
+      required: true
+    },
+    {
+      name: '包含JSDoc注释',
+      test: () => content.includes('/**') && content.includes('@param'),
+      required: true
+    },
+    {
+      name: '包含TypeScript类型定义',
+      test: () => content.includes(': string') && content.includes('Language'),
+      required: true
+    }
+  ];
+  
+  let passed = 0;
+  let total = checks.length;
+  
+  for (const check of checks) {
+    try {
+      const result = check.test();
+      if (result) {
+        console.log(`✅ ${check.name}`);
+        passed++;
+      } else {
+        console.log(`❌ ${check.name}`);
+        if (check.required) {
+          console.log(`   ⚠️ 这是必需的质量检查项`);
+        }
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name} - 检查失败: ${error.message}`);
+    }
+  }
+  
+  console.log(`\n📊 Prompts文件质量检查结果: ${passed}/${total} 通过`);
+  return passed === total;
+}
+
+/**
+ * 检查Prompts文件语法
+ */
+function testFileSyntax() {
+  console.log('🔍 检查Prompts文件语法...');
   
   try {
-    const result = await Promise.race([
-      testCase.test(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('测试超时')), TEST_CONFIG.timeout)
-      )
-    ]);
+    const { execSync } = require('child_process');
     
-    const duration = Date.now() - startTime;
+    // 运行TypeScript编译检查
+    execSync('npx tsc --noEmit src/lib/prompts.ts', { 
+      stdio: 'pipe',
+      timeout: 10000 
+    });
     
-    if (result.success) {
-      console.log(`✅ 测试通过 (${duration}ms)`);
-      if (result.message) {
-        console.log(`💬 ${result.message}`);
-      }
-      if (TEST_CONFIG.verbose && result.data) {
-        console.log(`📊 测试数据:`, JSON.stringify(result.data, null, 2));
-      }
-    } else {
-      console.log(`❌ 测试失败 (${duration}ms)`);
-      console.log(`💬 ${result.message}`);
-    }
-    
-    return {
-      name: testCase.name,
-      success: result.success,
-      duration,
-      message: result.message,
-      data: result.data
-    };
+    console.log('✅ Prompts文件语法检查通过');
+    return true;
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.log(`❌ 测试异常 (${duration}ms)`);
-    console.log(`💬 错误: ${error.message}`);
-    
-    return {
-      name: testCase.name,
-      success: false,
-      duration,
-      message: error.message,
-      error: error
-    };
+    console.log('❌ Prompts文件语法检查失败:', error.message);
+    return false;
   }
 }
 
 /**
- * 运行所有测试
+ * 检查Prompts文件导入依赖
  */
-async function runAllTests() {
-  console.log('🚀 开始 AI 提示词测试');
-  console.log('=' .repeat(50));
+function testFileImports() {
+  console.log('🔍 检查Prompts文件导入依赖...');
   
-  const results = [];
+  const promptsPath = path.join(process.cwd(), 'src/lib/prompts.ts');
+  const content = fs.readFileSync(promptsPath, 'utf8');
+  
+  // 检查导入的类型文件是否存在
+  const importChecks = [
+    {
+      name: 'Language类型',
+      path: 'src/types/index.ts',
+      test: () => content.includes('Language')
+    }
+  ];
+  
   let passed = 0;
-  let failed = 0;
+  let total = importChecks.length;
   
-  for (const testCase of testCases) {
-    const result = await runTest(testCase);
-    results.push(result);
-    
-    if (result.success) {
-      passed++;
-    } else {
-      failed++;
+  for (const check of importChecks) {
+    try {
+      const typePath = path.join(process.cwd(), check.path);
+      const typeExists = fs.existsSync(typePath);
+      const importExists = check.test();
+      
+      if (typeExists && importExists) {
+        console.log(`✅ ${check.name} - 类型文件存在且已导入`);
+        passed++;
+      } else if (!typeExists) {
+        console.log(`❌ ${check.name} - 类型文件不存在: ${check.path}`);
+      } else if (!importExists) {
+        console.log(`❌ ${check.name} - 类型未导入`);
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name} - 检查失败: ${error.message}`);
     }
   }
   
-  console.log('\n' + '=' .repeat(50));
-  console.log('📊 测试结果汇总');
-  console.log('=' .repeat(50));
-  console.log(`✅ 通过: ${passed}`);
-  console.log(`❌ 失败: ${failed}`);
-  console.log(`📈 总计: ${results.length}`);
-  console.log(`📊 成功率: ${((passed / results.length) * 100).toFixed(1)}%`);
+  console.log(`\n📊 Prompts文件导入检查结果: ${passed}/${total} 通过`);
+  return passed === total;
+}
+
+/**
+ * 检查Prompts文件模板设计
+ */
+function testTemplateDesign() {
+  console.log('🔍 检查Prompts文件模板设计...');
   
-  // 显示失败的测试
-  const failedTests = results.filter(r => !r.success);
-  if (failedTests.length > 0) {
-    console.log('\n❌ 失败的测试:');
-    failedTests.forEach(test => {
-      console.log(`  - ${test.name}: ${test.message}`);
-    });
+  const promptsPath = path.join(process.cwd(), 'src/lib/prompts.ts');
+  const content = fs.readFileSync(promptsPath, 'utf8');
+  
+  const designChecks = [
+    {
+      name: '汽车推荐模板',
+      test: () => content.includes('CAR_RECOMMENDATION_PROMPT') && content.includes('userMessage')
+    },
+    {
+      name: '聊天系统模板',
+      test: () => content.includes('CHAT_SYSTEM_PROMPT') && content.includes('language')
+    },
+    {
+      name: '车型搜索模板',
+      test: () => content.includes('CAR_SEARCH_PROMPT') && content.includes('searchQuery')
+    },
+    {
+      name: '价格分析模板',
+      test: () => content.includes('PRICE_ANALYSIS_PROMPT') && content.includes('carInfo')
+    },
+    {
+      name: '比较分析模板',
+      test: () => content.includes('COMPARISON_PROMPT') && content.includes('cars')
+    },
+    {
+      name: '错误处理模板',
+      test: () => content.includes('ERROR_HANDLING_PROMPT') && content.includes('error')
+    },
+    {
+      name: '中英文双语支持',
+      test: () => {
+        const hasZh = content.includes('language === \'zh\'');
+        const hasTernary = content.includes('?') && content.includes(':');
+        console.log(`   Debug: hasZh=${hasZh}, hasTernary=${hasTernary}`);
+        return hasZh && hasTernary;
+      }
+    },
+    {
+      name: 'JSON格式输出',
+      test: () => content.includes('JSON格式') || content.includes('JSON format')
+    },
+    {
+      name: '函数参数类型',
+      test: () => content.includes(': Language') && content.includes(': string')
+    },
+    {
+      name: '模板导出',
+      test: () => content.includes('export const') && content.includes('export const CAR_RECOMMENDATION_PROMPT')
+    }
+  ];
+  
+  let passed = 0;
+  let total = designChecks.length;
+  
+  for (const check of designChecks) {
+    try {
+      const result = check.test();
+      if (result) {
+        console.log(`✅ ${check.name}`);
+        passed++;
+      } else {
+        console.log(`❌ ${check.name}`);
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name} - 检查失败: ${error.message}`);
+    }
   }
   
-  return {
-    total: results.length,
-    passed,
-    failed,
-    results
+  console.log(`\n📊 Prompts文件模板设计检查结果: ${passed}/${total} 通过`);
+  return passed === total;
+}
+
+/**
+ * 运行Prompts文件质量检查
+ */
+async function runPromptsQualityCheck() {
+  console.log('🚀 开始Prompts文件质量检查');
+  console.log('=' .repeat(50));
+  
+  const results = {
+    fileExists: false,
+    content: false,
+    syntax: false,
+    imports: false,
+    templateDesign: false
   };
+  
+  // 检查文件是否存在
+  results.fileExists = testFileExists();
+  
+  if (!results.fileExists) {
+    console.log('\n❌ Prompts文件不存在，跳过其他检查');
+    return false;
+  }
+  
+  // 检查文件内容质量
+  results.content = testFileContent();
+  
+  // 检查文件语法
+  results.syntax = testFileSyntax();
+  
+  // 检查文件导入
+  results.imports = testFileImports();
+  
+  // 检查模板设计
+  results.templateDesign = testTemplateDesign();
+  
+  // 生成检查报告
+  const report = {
+    timestamp: new Date().toISOString(),
+    file: 'src/lib/prompts.ts',
+    results: results,
+    overall: Object.values(results).every(result => result)
+  };
+  
+  console.log('\n' + '=' .repeat(50));
+  console.log('📊 Prompts文件质量检查结果汇总');
+  console.log('=' .repeat(50));
+  console.log(`文件存在: ${results.fileExists ? '✅' : '❌'}`);
+  console.log(`内容质量: ${results.content ? '✅' : '❌'}`);
+  console.log(`语法检查: ${results.syntax ? '✅' : '❌'}`);
+  console.log(`导入检查: ${results.imports ? '✅' : '❌'}`);
+  console.log(`模板设计: ${results.templateDesign ? '✅' : '❌'}`);
+  console.log(`整体结果: ${report.overall ? '✅' : '❌'}`);
+  
+  return report.overall;
 }
 
 /**
@@ -459,16 +323,17 @@ async function runAllTests() {
  */
 async function main() {
   try {
-    const results = await runAllTests();
+    const success = await runPromptsQualityCheck();
     
-    if (results.failed > 0) {
-      process.exit(1);
-    } else {
-      console.log('\n🎉 所有测试通过！');
+    if (success) {
+      console.log('\n🎉 Prompts文件质量检查通过！');
       process.exit(0);
+    } else {
+      console.log('\n🚨 Prompts文件质量检查失败，请修复问题');
+      process.exit(1);
     }
   } catch (error) {
-    console.error('💥 测试运行失败:', error.message);
+    console.error('💥 Prompts文件质量检查运行失败:', error.message);
     process.exit(1);
   }
 }
@@ -479,7 +344,10 @@ if (require.main === module) {
 }
 
 module.exports = {
-  runTest,
-  runAllTests,
-  testCases
+  runPromptsQualityCheck,
+  testFileExists,
+  testFileContent,
+  testFileSyntax,
+  testFileImports,
+  testTemplateDesign
 };

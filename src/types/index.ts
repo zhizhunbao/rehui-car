@@ -141,8 +141,8 @@ export interface CreateNextStepData {
 
 // 对话详情响应类型
 export interface ConversationDetailResponse {
-  conversation: Conversation;
-  messages: ChatMessage[];
+  conversation: import('./chat').Conversation;
+  messages: import('./chat').ChatMessage[];
   recommendations: import('./car').CarRecommendation[];
   next_steps: import('./car').NextStep[];
 }
@@ -164,13 +164,7 @@ export interface APIListResponse<T> {
   };
 }
 
-// 车型搜索参数类型
-export interface CarSearchParams {
-  language?: Language;
-  limit?: number;
-  category?: string;
-  price_range?: [number, number];
-}
+// 车型搜索参数类型（已在car.ts中定义，这里重新导出）
 
 // 车型搜索响应类型
 export interface CarSearchResponse {

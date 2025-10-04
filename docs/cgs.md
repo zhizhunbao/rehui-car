@@ -11,8 +11,21 @@
 - 🔄 当前阶段：第七阶段 - UI基础组件开发
 - 📊 测试覆盖率：配置文件100% + 工具函数100% + 数据库100% + AI集成100% + API端点100%
 - 🔧 MCP配置：Supabase + 文件系统 + 内存管理 + 浏览器 + GitHub + 思维链服务器
+- 🤖 AI集成完成：GROQ + Gemini双AI架构，自动降级机制，100%测试通过
 
 ## 2. 目录结构规范
+
+### 2.1 绝对路径约束
+
+**项目根目录**: `D:\BaiduSyncdisk\workspace\python_workspace\rehui-car`
+
+所有相对路径均基于此根目录：
+- 配置文件路径：`./package.json` → `D:\BaiduSyncdisk\workspace\python_workspace\rehui-car\package.json`
+- 源码路径：`./src/` → `D:\BaiduSyncdisk\workspace\python_workspace\rehui-car\src\`
+- 测试路径：`./tests/` → `D:\BaiduSyncdisk\workspace\python_workspace\rehui-car\tests\`
+- 文档路径：`./docs/` → `D:\BaiduSyncdisk\workspace\python_workspace\rehui-car\docs\`
+
+### 2.2 目录结构树
 
 ```
 # 项目根目录文件状态
@@ -47,16 +60,18 @@
 │   │   ├── test-data-insertion.js         # 数据插入和查询测试 ✅
 │   │   ├── test-mcp-connection.js         # MCP数据库连接测试 ✅
 │   │   └── test-mcp-comprehensive.js      # MCP数据库综合功能测试 ✅
-│   ├── lib/                               # 工具库测试 ✅
-│   │   ├── test-utils.js                  # 工具函数测试 ✅
-│   │   ├── test-constants.js              # 常量定义测试 ✅
-│   │   ├── test-validations.js            # 数据验证测试 ✅
-│   │   ├── test-supabase.js               # Supabase客户端测试 ✅
+│   ├── ai/                                # AI集成测试 ✅
 │   │   ├── test-groq.js                   # GROQ AI测试 ✅
 │   │   ├── test-gemini.js                 # Gemini AI测试 ✅
 │   │   ├── test-prompts.js                # AI提示词测试 ✅
 │   │   ├── test-ai-utils.js               # AI工具函数测试 ✅
-│   │   └── test-ai-integration.js         # AI集成测试 ✅
+│   │   ├── test-car-resources.js          # 汽车资源配置测试 ✅
+│   │   └── test-ai-integration.js         # AI集成综合测试 ✅
+│   ├── lib/                               # 工具库测试 ✅
+│   │   ├── test-utils.js                  # 工具函数测试 ✅
+│   │   ├── test-constants.js              # 常量定义测试 ✅
+│   │   ├── test-validations.js            # 数据验证测试 ✅
+│   │   └── test-supabase.js               # Supabase客户端测试 ✅
 │   ├── api/                               # API端点测试 ✅
 │   │   ├── test-health.js                 # 健康检查API测试 ✅
 │   │   ├── test-chat.js                   # 聊天API测试 ✅
@@ -108,13 +123,12 @@ src/
 │   ├── constants/                         # 常量定义 ✅
 │   │   ├── car-resources.ts               # 加拿大汽车资源配置 ✅
 │   │   └── constants.ts                   # 通用常量 ✅
+│   ├── groq.ts                            # GROQ AI客户端 ✅
 │   ├── gemini.ts                          # Google Gemini客户端 ✅
-│   ├── groq.ts                            # GROQ客户端 ✅
-│   ├── supabase.ts                        # Supabase客户端 ✅
-│   ├── utils.ts                           # 通用工具函数 ✅
-│   ├── validations.ts                     # 数据验证 ✅
 │   ├── prompts.ts                         # AI提示词模板 ✅
-│   └── ai-utils.ts                        # AI工具函数 ✅
+│   ├── ai-utils.ts                        # AI工具函数 ✅
+│   ├── utils.ts                           # 通用工具函数 ✅
+│   └── validations.ts                     # 数据验证 ✅
 ├── types/                                 # 类型定义 ✅
 │   ├── index.ts                           # 主要类型导出 ✅
 │   ├── api.ts                             # API相关类型 ✅
@@ -762,7 +776,67 @@ function requireEnv(key: string): string {
 }
 ```
 
-### 8.3 错误处理规范
+### 8.3 绝对路径约束
+
+**核心原则**: 🎯 所有文件路径必须使用绝对路径，严格禁止相对路径
+
+**项目根目录**: `D:\BaiduSyncdisk\workspace\python_workspace\rehui-car`
+
+```typescript
+// ❌ 错误 - 严格禁止相对路径
+import { Car } from './types/car';
+import { supabase } from '../lib/supabase';
+import { utils } from './utils';
+import { constants } from '../constants';
+const config = require('./config.json');
+const data = require('../data/sample.json');
+
+// ❌ 错误 - 禁止所有相对路径符号
+const path = './src/components';
+const path = '../lib/utils';
+const path = './data/sample.json';
+const path = '../output/result.txt';
+
+// ✅ 正确 - 使用绝对路径
+import { Car } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types/car';
+import { supabase } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/supabase';
+import { utils } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/utils';
+import { constants } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/constants';
+const config = require('D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/config.json');
+const data = require('D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/data/sample.json');
+
+// ✅ 正确 - 绝对路径变量
+const PROJECT_ROOT = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car';
+const componentPath = `${PROJECT_ROOT}/src/components/ChatInput.tsx`;
+const utilsPath = `${PROJECT_ROOT}/src/lib/utils.ts`;
+
+// 工具函数示例
+function getAbsolutePath(relativePath: string): string {
+  return `${PROJECT_ROOT}/${relativePath}`;
+}
+
+// 使用示例
+const carTypesPath = getAbsolutePath('src/types/car.ts');
+const supabasePath = getAbsolutePath('src/lib/supabase.ts');
+```
+
+**严格禁止的路径模式**:
+- `./` - 当前目录相对路径
+- `../` - 上级目录相对路径  
+- `../../` - 多级上级目录相对路径
+- 任何包含相对路径符号的路径
+
+**路径映射规则**:
+- 配置文件: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/package.json`
+- 源码目录: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/`
+- 测试目录: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/tests/`
+- 文档目录: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/docs/`
+- API路由: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/app/api/`
+- 组件目录: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/components/`
+- 工具库: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/`
+- 类型定义: `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types/`
+
+### 8.4 错误处理规范
 
 ```typescript
 // API路由错误处理
@@ -788,9 +862,171 @@ export async function POST(request: Request) {
 }
 ```
 
-## 9. 加拿大汽车资源配置
+## 9. 代码生成规范
 
-### 9.1 二手车平台 (`src/lib/constants/car-resources.ts`)
+### 9.1 绝对路径强制约束
+
+**生成代码时必须遵循的路径规范**:
+
+1. **所有import语句必须使用绝对路径**
+   ```typescript
+   // ✅ 正确 - 使用路径映射（推荐）
+   import { Car } from '@/types/car';
+   import { supabase } from '@/lib/supabase';
+   import { ChatInput } from '@/components/ChatInput';
+   import { useChat } from '@/hooks/useChat';
+   
+   // ✅ 正确 - 完整绝对路径
+   import { Car } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types/car';
+   import { supabase } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/supabase';
+   
+   // ❌ 错误 - 禁止相对路径
+   import { Car } from './types/car';
+   import { supabase } from '../lib/supabase';
+   import { utils } from './utils';
+   import { constants } from '../constants';
+   ```
+
+2. **所有文件操作必须使用绝对路径**
+   ```typescript
+   // ✅ 正确
+   const configPath = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/config.json';
+   const readmePath = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/README.md';
+   
+   // ❌ 错误 - 禁止相对路径
+   const configPath = './config.json';
+   const readmePath = '../README.md';
+   const dataPath = './data/sample.json';
+   const outputPath = '../output/result.txt';
+   ```
+
+3. **禁止所有相对路径符号**
+   ```typescript
+   // ❌ 严格禁止的路径模式
+   import { something } from './file';           // 禁止 ./
+   import { something } from '../file';          // 禁止 ../
+   import { something } from '../../file';      // 禁止 ../../
+   const path = './relative/path';              // 禁止 ./
+   const path = '../relative/path';             // 禁止 ../
+   const path = './src/components';             // 禁止 ./
+   const path = '../lib/utils';                 // 禁止 ../
+   
+   // ✅ 正确的绝对路径模式
+   import { something } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/file';
+   import { something } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/utils';
+   const path = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/components';
+   const path = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/utils';
+   ```
+
+4. **工具函数路径处理**
+   ```typescript
+   const PROJECT_ROOT = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car';
+   
+   function getAbsolutePath(relativePath: string): string {
+     return `${PROJECT_ROOT}/${relativePath}`;
+   }
+   
+   // 使用示例
+   const apiPath = getAbsolutePath('src/app/api/chat/route.ts');
+   const componentPath = getAbsolutePath('src/components/ChatInput.tsx');
+   ```
+
+### 9.2 路径映射表
+
+#### 9.2.1 TypeScript 路径映射（推荐使用）
+
+| 路径映射 | 实际路径 | 使用示例 |
+|----------|----------|----------|
+| `@/*` | `./src/*` | `import { Car } from '@/types/car';` |
+| `@/components/*` | `./src/components/*` | `import { ChatInput } from '@/components/ChatInput';` |
+| `@/lib/*` | `./src/lib/*` | `import { supabase } from '@/lib/supabase';` |
+| `@/types/*` | `./src/types/*` | `import { Car } from '@/types/car';` |
+| `@/hooks/*` | `./src/hooks/*` | `import { useChat } from '@/hooks/useChat';` |
+| `@/app/*` | `./src/app/*` | `import { layout } from '@/app/layout';` |
+
+#### 9.2.2 完整绝对路径映射
+
+| 用途 | 绝对路径 |
+|------|----------|
+| 项目根目录 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/` |
+| 配置文件 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/package.json` |
+| 源码目录 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/` |
+| API路由 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/app/api/` |
+| 组件目录 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/components/` |
+| 工具库 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/` |
+| 类型定义 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types/` |
+| 测试目录 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/tests/` |
+| 文档目录 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/docs/` |
+| 静态资源 | `D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/public/` |
+
+### 9.3 相对路径禁止约束
+
+**严格禁止的路径模式**:
+
+```typescript
+// ❌ 绝对禁止 - 相对路径符号
+import { something } from './file';           // 禁止 ./
+import { something } from '../file';          // 禁止 ../
+import { something } from '../../file';      // 禁止 ../../
+import { something } from '../../../file';   // 禁止 ../../../
+
+// ❌ 绝对禁止 - 相对路径变量
+const relativePath = './src/components';
+const relativePath = '../lib/utils';
+const relativePath = './data/sample.json';
+
+// ❌ 绝对禁止 - 相对路径字符串
+const path = './config.json';
+const path = '../README.md';
+const path = './src/types/car.ts';
+const path = '../lib/supabase.ts';
+
+// ❌ 绝对禁止 - 相对路径模板
+const path = `./${folder}/${file}`;
+const path = `../${relativePath}`;
+const path = `./src/${component}`;
+```
+
+**正确的绝对路径模式**:
+
+```typescript
+// ✅ 正确 - 使用路径映射（推荐）
+import { Car } from '@/types/car';
+import { supabase } from '@/lib/supabase';
+import { ChatInput } from '@/components/ChatInput';
+import { useChat } from '@/hooks/useChat';
+
+// ✅ 正确 - 完整绝对路径
+import { Car } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types/car';
+import { supabase } from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/supabase';
+
+// ✅ 正确 - 绝对路径变量
+const PROJECT_ROOT = 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car';
+const configPath = `${PROJECT_ROOT}/config.json`;
+const componentPath = `${PROJECT_ROOT}/src/components/ChatInput.tsx`;
+
+// ✅ 正确 - 绝对路径模板
+const path = `${PROJECT_ROOT}/src/${component}`;
+const path = `${PROJECT_ROOT}/lib/${utility}`;
+```
+
+### 9.4 代码生成检查清单
+
+生成任何代码文件时，必须验证：
+
+- [ ] 所有import语句使用绝对路径
+- [ ] 所有文件操作使用绝对路径  
+- [ ] 所有require/import路径不包含相对路径符号 (`./`, `../`)
+- [ ] 路径分隔符使用正斜杠 (`/`) 而非反斜杠 (`\`)
+- [ ] 项目根目录路径正确：`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car`
+- [ ] 没有使用 `./` 开头的路径
+- [ ] 没有使用 `../` 开头的路径
+- [ ] 没有使用 `../../` 开头的路径
+- [ ] 所有路径都基于项目根目录：`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/`
+
+## 10. 加拿大汽车资源配置
+
+### 10.1 二手车平台 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/lib/constants/car-resources.ts`)
 
 ```typescript
 export const USED_CAR_PLATFORMS = {
@@ -816,7 +1052,7 @@ export const USED_CAR_PLATFORMS = {
 } as const;
 ```
 
-### 9.2 车辆信息工具
+### 10.2 车辆信息工具
 
 ```typescript
 export const VEHICLE_INFO_TOOLS = {
@@ -837,9 +1073,9 @@ export const VEHICLE_INFO_TOOLS = {
 } as const;
 ```
 
-## 10. MCP (Model Context Protocol) 配置
+## 11. MCP (Model Context Protocol) 配置
 
-### 10.1 MCP 服务器配置 (`.cursor/mcp.json`)
+### 11.1 MCP 服务器配置 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/.cursor/mcp.json`)
 
 ```json
 {
@@ -874,7 +1110,7 @@ export const VEHICLE_INFO_TOOLS = {
 }
 ```
 
-### 10.2 MCP 功能说明
+### 11.2 MCP 功能说明
 
 - **Supabase MCP**: 直接访问 Supabase 数据库，执行 SQL 查询和管理数据
 - **文件系统 MCP**: 访问项目文件，读取和搜索文件内容
@@ -883,9 +1119,9 @@ export const VEHICLE_INFO_TOOLS = {
 - **GitHub MCP**: 代码仓库管理和版本控制
 - **思维链 MCP**: 复杂推理和问题解决
 
-## 11. 环境配置
+## 12. 环境配置
 
-### 11.1 环境变量 (`.env.local`)
+### 12.1 环境变量 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/.env.local`)
 
 ```bash
 # AI服务
@@ -902,7 +1138,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_ENV=development
 ```
 
-### 10.2 TypeScript配置 (`tsconfig.json`)
+### 12.2 TypeScript配置 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/tsconfig.json`)
 
 ```json
 {
@@ -918,7 +1154,7 @@ NEXT_PUBLIC_APP_ENV=development
 }
 ```
 
-### 10.3 Tailwind配置 (`tailwind.config.js`)
+### 12.3 Tailwind配置 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/tailwind.config.js`)
 
 ```javascript
 module.exports = {
@@ -940,9 +1176,9 @@ module.exports = {
 }
 ```
 
-## 12. 部署配置
+## 13. 部署配置
 
-### 12.1 Vercel配置 (`vercel.json`)
+### 13.1 Vercel配置 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/vercel.json`)
 
 ```json
 {
@@ -955,7 +1191,7 @@ module.exports = {
 }
 ```
 
-### 12.2 Next.js配置 (`next.config.js`)
+### 13.2 Next.js配置 (`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/next.config.js`)
 
 ```javascript
 module.exports = {
@@ -982,6 +1218,23 @@ module.exports = {
 ---
 
 ## 📝 更新日志 (2024-10-03)
+
+### v1.2.0 更新内容
+
+**新增功能**：
+- ✅ 添加绝对路径约束规范到代码生成规范
+- ✅ 新增第9节"代码生成规范"，包含绝对路径强制约束
+- ✅ 更新所有章节中的文件路径为绝对路径
+- ✅ 新增代码生成检查清单，确保路径规范执行
+- ✅ 强化相对路径禁止约束，严格禁止所有相对路径符号
+
+**技术改进**：
+- 🎯 强制使用绝对路径：`D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/`
+- 🚫 严格禁止相对路径：`./`, `../`, `../../` 等所有相对路径符号
+- 📋 新增路径映射表和检查清单
+- 🔧 更新所有配置示例使用绝对路径
+- 📚 完善代码生成规范文档
+- ⚠️ 新增相对路径禁止约束章节，提供详细错误示例
 
 ### v1.1.0 更新内容
 

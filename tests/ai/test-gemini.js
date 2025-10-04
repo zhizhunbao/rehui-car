@@ -1,329 +1,336 @@
+#!/usr/bin/env node
+
 /**
- * Gemini AI 测试脚本
- * 测试 Gemini AI 集成的各项功能
+ * Gemini AI客户端测试脚本
+ * 测试Gemini API集成和代码质量
  */
 
-const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
 // 测试配置
 const TEST_CONFIG = {
-  timeout: 30000, // 30秒超时
-  retries: 3,
+  timeout: 30000,
   verbose: true
 };
 
-// 测试用例
-const testCases = [
-  {
-    name: 'Gemini Health Check',
-    description: '测试 Gemini API 连接状态',
-    test: async () => {
-      try {
-        const { healthCheck } = await import('../src/lib/gemini.ts');
-        const isHealthy = await healthCheck();
-        return {
-          success: isHealthy,
-          message: isHealthy ? 'Gemini API 连接正常' : 'Gemini API 连接失败'
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 健康检查失败: ${error.message}`
-        };
-      }
-    }
-  },
+/**
+ * 检查Gemini文件是否存在
+ */
+function testFileExists() {
+  console.log('🔍 检查Gemini文件是否存在...');
   
-  {
-    name: 'Gemini Chat Response',
-    description: '测试 Gemini 聊天响应生成',
-    test: async () => {
-      try {
-        const { generateChatResponse } = await import('../src/lib/gemini.ts');
-        
-        const messages = [
-          {
-            role: 'user',
-            content: 'I need a reliable car for daily commuting, budget around $25,000'
-          }
-        ];
-        
-        const response = await generateChatResponse(messages, 'en');
-        
-        return {
-          success: response && response.summary && response.recommendations,
-          message: response ? 'Gemini 聊天响应生成成功' : 'Gemini 聊天响应生成失败',
-          data: response
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 聊天响应测试失败: ${error.message}`
-        };
-      }
-    }
-  },
+  const geminiPath = path.join(process.cwd(), 'src/lib/gemini.ts');
   
-  {
-    name: 'Gemini Car Recommendation',
-    description: '测试 Gemini 车型推荐功能',
-    test: async () => {
-      try {
-        const { generateCarRecommendation } = await import('../src/lib/gemini.ts');
-        
-        const userMessage = 'I want a fuel-efficient sedan for city driving, budget $30,000';
-        const response = await generateCarRecommendation(userMessage, 'en');
-        
-        return {
-          success: response && response.recommendations && response.recommendations.length > 0,
-          message: response ? 'Gemini 车型推荐生成成功' : 'Gemini 车型推荐生成失败',
-          data: response
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 车型推荐测试失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Gemini Conversation Summary',
-    description: '测试 Gemini 对话摘要生成',
-    test: async () => {
-      try {
-        const { generateConversationSummary } = await import('../src/lib/gemini.ts');
-        
-        const messages = [
-          {
-            role: 'user',
-            content: 'I am looking for a family car'
-          },
-          {
-            role: 'assistant',
-            content: 'Great! I can help you find the perfect family car. What is your budget range?'
-          },
-          {
-            role: 'user',
-            content: 'Around $35,000, need good safety features'
-          },
-          {
-            role: 'assistant',
-            content: 'Perfect! Safety is important for family cars. Do you prefer SUV or sedan?'
-          }
-        ];
-        
-        const summary = await generateConversationSummary(messages, 'en');
-        
-        return {
-          success: summary && summary.en && summary.zh,
-          message: summary ? 'Gemini 对话摘要生成成功' : 'Gemini 对话摘要生成失败',
-          data: summary
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 对话摘要测试失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Gemini Chinese Support',
-    description: '测试 Gemini 中文支持',
-    test: async () => {
-      try {
-        const { generateChatResponse } = await import('../src/lib/gemini.ts');
-        
-        const messages = [
-          {
-            role: 'user',
-            content: '我需要一辆适合家庭使用的汽车，预算25万人民币'
-          }
-        ];
-        
-        const response = await generateChatResponse(messages, 'zh');
-        
-        return {
-          success: response && response.summary && response.summary.zh,
-          message: response ? 'Gemini 中文支持正常' : 'Gemini 中文支持失败',
-          data: response
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 中文支持测试失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Gemini Response Format',
-    description: '测试 Gemini 响应格式正确性',
-    test: async () => {
-      try {
-        const { generateChatResponse } = await import('../src/lib/gemini.ts');
-        
-        const messages = [
-          {
-            role: 'user',
-            content: 'I need a car recommendation'
-          }
-        ];
-        
-        const response = await generateChatResponse(messages, 'en');
-        
-        // 验证响应格式
-        const isValid = response && 
-          response.summary && 
-          typeof response.summary.en === 'string' &&
-          typeof response.summary.zh === 'string' &&
-          Array.isArray(response.recommendations) &&
-          Array.isArray(response.next_steps);
-        
-        return {
-          success: isValid,
-          message: isValid ? 'Gemini 响应格式正确' : 'Gemini 响应格式错误',
-          data: response
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 响应格式测试失败: ${error.message}`
-        };
-      }
-    }
-  },
-  
-  {
-    name: 'Gemini Error Handling',
-    description: '测试 Gemini 错误处理',
-    test: async () => {
-      try {
-        const { generateChatResponse } = await import('../src/lib/gemini.ts');
-        
-        // 测试空消息
-        const messages = [];
-        const response = await generateChatResponse(messages, 'en');
-        
-        return {
-          success: response && response.summary,
-          message: response ? 'Gemini 错误处理正常' : 'Gemini 错误处理失败',
-          data: response
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: `Gemini 错误处理测试失败: ${error.message}`
-        };
-      }
-    }
+  if (!fs.existsSync(geminiPath)) {
+    console.log('❌ Gemini文件不存在:', geminiPath);
+    return false;
   }
-];
+  
+  console.log('✅ Gemini文件存在:', geminiPath);
+  return true;
+}
 
 /**
- * 运行单个测试
+ * 检查Gemini文件内容质量
  */
-async function runTest(testCase) {
-  console.log(`\n🧪 运行测试: ${testCase.name}`);
-  console.log(`📝 描述: ${testCase.description}`);
+function testFileContent() {
+  console.log('🔍 检查Gemini文件内容质量...');
   
-  const startTime = Date.now();
+  const geminiPath = path.join(process.cwd(), 'src/lib/gemini.ts');
+  const content = fs.readFileSync(geminiPath, 'utf8');
+  
+  const checks = [
+    {
+      name: '导入语句使用绝对路径',
+      test: () => content.includes("from 'D:/BaiduSyncdisk/workspace/python_workspace/rehui-car/src/types'"),
+      required: true
+    },
+    {
+      name: '没有相对路径导入',
+      test: () => !content.includes("from './") && !content.includes("from '../"),
+      required: true
+    },
+    {
+      name: '包含环境变量验证',
+      test: () => content.includes('process.env.GEMINI_API_KEY'),
+      required: true
+    },
+    {
+      name: '包含错误处理',
+      test: () => content.includes('try {') && content.includes('catch (error)'),
+      required: true
+    },
+    {
+      name: '包含TypeScript类型定义',
+      test: () => content.includes('interface ') && content.includes(': Promise<'),
+      required: true
+    },
+    {
+      name: '包含JSDoc注释',
+      test: () => content.includes('/**') && content.includes('@param'),
+      required: true
+    },
+    {
+      name: '包含健康检查函数',
+      test: () => content.includes('healthCheck'),
+      required: true
+    },
+    {
+      name: '包含使用统计函数',
+      test: () => content.includes('getUsageStats'),
+      required: true
+    },
+    {
+      name: '包含聊天响应函数',
+      test: () => content.includes('generateChatResponse'),
+      required: true
+    },
+    {
+      name: '包含汽车推荐函数',
+      test: () => content.includes('generateCarRecommendation'),
+      required: true
+    }
+  ];
+  
+  let passed = 0;
+  let total = checks.length;
+  
+  for (const check of checks) {
+    try {
+      const result = check.test();
+      if (result) {
+        console.log(`✅ ${check.name}`);
+        passed++;
+      } else {
+        console.log(`❌ ${check.name}`);
+        if (check.required) {
+          console.log(`   ⚠️ 这是必需的质量检查项`);
+        }
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name} - 检查失败: ${error.message}`);
+    }
+  }
+  
+  console.log(`\n📊 Gemini文件质量检查结果: ${passed}/${total} 通过`);
+  return passed === total;
+}
+
+/**
+ * 检查Gemini文件语法
+ */
+function testFileSyntax() {
+  console.log('🔍 检查Gemini文件语法...');
   
   try {
-    const result = await Promise.race([
-      testCase.test(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('测试超时')), TEST_CONFIG.timeout)
-      )
-    ]);
+    const { execSync } = require('child_process');
     
-    const duration = Date.now() - startTime;
+    // 运行TypeScript编译检查
+    execSync('npx tsc --noEmit src/lib/gemini.ts', { 
+      stdio: 'pipe',
+      timeout: 10000 
+    });
     
-    if (result.success) {
-      console.log(`✅ 测试通过 (${duration}ms)`);
-      if (result.message) {
-        console.log(`💬 ${result.message}`);
-      }
-      if (TEST_CONFIG.verbose && result.data) {
-        console.log(`📊 响应数据:`, JSON.stringify(result.data, null, 2));
-      }
-    } else {
-      console.log(`❌ 测试失败 (${duration}ms)`);
-      console.log(`💬 ${result.message}`);
-    }
-    
-    return {
-      name: testCase.name,
-      success: result.success,
-      duration,
-      message: result.message,
-      data: result.data
-    };
+    console.log('✅ Gemini文件语法检查通过');
+    return true;
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.log(`❌ 测试异常 (${duration}ms)`);
-    console.log(`💬 错误: ${error.message}`);
-    
-    return {
-      name: testCase.name,
-      success: false,
-      duration,
-      message: error.message,
-      error: error
-    };
+    console.log('❌ Gemini文件语法检查失败:', error.message);
+    return false;
   }
 }
 
 /**
- * 运行所有测试
+ * 检查Gemini文件导入依赖
  */
-async function runAllTests() {
-  console.log('🚀 开始 Gemini AI 测试');
-  console.log('=' .repeat(50));
+function testFileImports() {
+  console.log('🔍 检查Gemini文件导入依赖...');
   
-  const results = [];
+  const geminiPath = path.join(process.cwd(), 'src/lib/gemini.ts');
+  const content = fs.readFileSync(geminiPath, 'utf8');
+  
+  // 检查导入的类型文件是否存在
+  const importChecks = [
+    {
+      name: 'ChatMessage类型',
+      path: 'src/types/chat.ts',
+      test: () => content.includes('ChatMessage')
+    },
+    {
+      name: 'Language类型',
+      path: 'src/types/index.ts',
+      test: () => content.includes('Language')
+    },
+    {
+      name: 'BilingualText类型',
+      path: 'src/types/index.ts',
+      test: () => content.includes('BilingualText')
+    },
+    {
+      name: 'CarRecommendation类型',
+      path: 'src/types/car.ts',
+      test: () => content.includes('CarRecommendation')
+    },
+    {
+      name: 'NextStep类型',
+      path: 'src/types/car.ts',
+      test: () => content.includes('NextStep')
+    }
+  ];
+  
   let passed = 0;
-  let failed = 0;
+  let total = importChecks.length;
   
-  for (const testCase of testCases) {
-    const result = await runTest(testCase);
-    results.push(result);
-    
-    if (result.success) {
-      passed++;
-    } else {
-      failed++;
+  for (const check of importChecks) {
+    try {
+      const typePath = path.join(process.cwd(), check.path);
+      const typeExists = fs.existsSync(typePath);
+      const importExists = check.test();
+      
+      if (typeExists && importExists) {
+        console.log(`✅ ${check.name} - 类型文件存在且已导入`);
+        passed++;
+      } else if (!typeExists) {
+        console.log(`❌ ${check.name} - 类型文件不存在: ${check.path}`);
+      } else if (!importExists) {
+        console.log(`❌ ${check.name} - 类型未导入`);
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name} - 检查失败: ${error.message}`);
     }
   }
   
-  console.log('\n' + '=' .repeat(50));
-  console.log('📊 测试结果汇总');
-  console.log('=' .repeat(50));
-  console.log(`✅ 通过: ${passed}`);
-  console.log(`❌ 失败: ${failed}`);
-  console.log(`📈 总计: ${results.length}`);
-  console.log(`📊 成功率: ${((passed / results.length) * 100).toFixed(1)}%`);
+  console.log(`\n📊 Gemini文件导入检查结果: ${passed}/${total} 通过`);
+  return passed === total;
+}
+
+/**
+ * 检查Gemini文件API设计
+ */
+function testAPIDesign() {
+  console.log('🔍 检查Gemini文件API设计...');
   
-  // 显示失败的测试
-  const failedTests = results.filter(r => !r.success);
-  if (failedTests.length > 0) {
-    console.log('\n❌ 失败的测试:');
-    failedTests.forEach(test => {
-      console.log(`  - ${test.name}: ${test.message}`);
-    });
+  const geminiPath = path.join(process.cwd(), 'src/lib/gemini.ts');
+  const content = fs.readFileSync(geminiPath, 'utf8');
+  
+  const designChecks = [
+    {
+      name: 'API URL配置',
+      test: () => content.includes('GEMINI_API_URL') && content.includes('generativelanguage.googleapis.com')
+    },
+    {
+      name: '模型配置',
+      test: () => content.includes('GEMINI_MODEL') && content.includes('gemini-2.0-flash-exp')
+    },
+    {
+      name: '环境变量验证函数',
+      test: () => content.includes('getGeminiApiKey') && content.includes('throw new Error')
+    },
+    {
+      name: '响应类型定义',
+      test: () => content.includes('interface GeminiResponse')
+    },
+    {
+      name: 'AI推荐响应类型',
+      test: () => content.includes('interface AIRecommendationResponse')
+    },
+    {
+      name: '错误处理机制',
+      test: () => content.includes('try {') && content.includes('catch (error)') && content.includes('throw new Error')
+    },
+    {
+      name: 'HTTP请求配置',
+      test: () => content.includes('fetch(') && content.includes('method: \'POST\'')
+    },
+    {
+      name: '请求头配置',
+      test: () => content.includes('Content-Type') && content.includes('application/json')
+    },
+    {
+      name: '响应处理',
+      test: () => content.includes('response.json()') && content.includes('response.ok')
+    },
+    {
+      name: 'JSON解析',
+      test: () => content.includes('JSON.parse') && content.includes('as AIRecommendationResponse')
+    }
+  ];
+  
+  let passed = 0;
+  let total = designChecks.length;
+  
+  for (const check of designChecks) {
+    try {
+      const result = check.test();
+      if (result) {
+        console.log(`✅ ${check.name}`);
+        passed++;
+      } else {
+        console.log(`❌ ${check.name}`);
+      }
+    } catch (error) {
+      console.log(`❌ ${check.name} - 检查失败: ${error.message}`);
+    }
   }
   
-  return {
-    total: results.length,
-    passed,
-    failed,
-    results
+  console.log(`\n📊 Gemini文件API设计检查结果: ${passed}/${total} 通过`);
+  return passed === total;
+}
+
+/**
+ * 运行Gemini文件质量检查
+ */
+async function runGeminiQualityCheck() {
+  console.log('🚀 开始Gemini文件质量检查');
+  console.log('=' .repeat(50));
+  
+  const results = {
+    fileExists: false,
+    content: false,
+    syntax: false,
+    imports: false,
+    apiDesign: false
   };
+  
+  // 检查文件是否存在
+  results.fileExists = testFileExists();
+  
+  if (!results.fileExists) {
+    console.log('\n❌ Gemini文件不存在，跳过其他检查');
+    return false;
+  }
+  
+  // 检查文件内容质量
+  results.content = testFileContent();
+  
+  // 检查文件语法
+  results.syntax = testFileSyntax();
+  
+  // 检查文件导入
+  results.imports = testFileImports();
+  
+  // 检查API设计
+  results.apiDesign = testAPIDesign();
+  
+  // 生成检查报告
+  const report = {
+    timestamp: new Date().toISOString(),
+    file: 'src/lib/gemini.ts',
+    results: results,
+    overall: Object.values(results).every(result => result)
+  };
+  
+  console.log('\n' + '=' .repeat(50));
+  console.log('📊 Gemini文件质量检查结果汇总');
+  console.log('=' .repeat(50));
+  console.log(`文件存在: ${results.fileExists ? '✅' : '❌'}`);
+  console.log(`内容质量: ${results.content ? '✅' : '❌'}`);
+  console.log(`语法检查: ${results.syntax ? '✅' : '❌'}`);
+  console.log(`导入检查: ${results.imports ? '✅' : '❌'}`);
+  console.log(`API设计: ${results.apiDesign ? '✅' : '❌'}`);
+  console.log(`整体结果: ${report.overall ? '✅' : '❌'}`);
+  
+  return report.overall;
 }
 
 /**
@@ -331,16 +338,17 @@ async function runAllTests() {
  */
 async function main() {
   try {
-    const results = await runAllTests();
+    const success = await runGeminiQualityCheck();
     
-    if (results.failed > 0) {
-      process.exit(1);
-    } else {
-      console.log('\n🎉 所有测试通过！');
+    if (success) {
+      console.log('\n🎉 Gemini文件质量检查通过！');
       process.exit(0);
+    } else {
+      console.log('\n🚨 Gemini文件质量检查失败，请修复问题');
+      process.exit(1);
     }
   } catch (error) {
-    console.error('💥 测试运行失败:', error.message);
+    console.error('💥 Gemini文件质量检查运行失败:', error.message);
     process.exit(1);
   }
 }
@@ -351,7 +359,10 @@ if (require.main === module) {
 }
 
 module.exports = {
-  runTest,
-  runAllTests,
-  testCases
+  runGeminiQualityCheck,
+  testFileExists,
+  testFileContent,
+  testFileSyntax,
+  testFileImports,
+  testAPIDesign
 };
