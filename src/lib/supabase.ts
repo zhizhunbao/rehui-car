@@ -1,22 +1,26 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database';
 
-// 环境变量验证
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// 确保环境变量正确加载
+import dotenv from 'dotenv';
+import path from 'path';
 
-if (!supabaseUrl) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
+const envPath = path.resolve(process.cwd(), '.env.local');
+dotenv.config({ path: envPath });
+
+// 严格的环境变量处理 - 禁止 fallback 默认值
+function requireEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
 }
 
-if (!supabaseAnonKey) {
-  throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
-}
-
-if (!supabaseServiceKey) {
-  throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
-}
+// 环境变量配置 - 使用严格模式
+const supabaseUrl = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey = requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+const supabaseServiceKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
 
 // 客户端配置
 const supabaseConfig = {
@@ -32,26 +36,36 @@ const supabaseConfig = {
   }
 };
 
-// 创建客户端实例
-export const supabase = createClient<Database>(
-  supabaseUrl,
-  supabaseAnonKey,
-  supabaseConfig
-);
+// 客户端创建函数
+export function createSupabaseClient(): SupabaseClient<Database> {
+  return createClient<Database>(
+    supabaseUrl,
+    supabaseAnonKey,
+    supabaseConfig
+  );
+}
 
-// 服务端客户端（使用服务角色密钥）
-export const supabaseAdmin = createClient<Database>(
-  supabaseUrl,
-  supabaseServiceKey,
-  {
-    ...supabaseConfig,
-    auth: {
-      ...supabaseConfig.auth,
-      autoRefreshToken: false,
-      persistSession: false
+// 管理员客户端创建函数
+export function createAdminClient(): SupabaseClient<Database> {
+  return createClient<Database>(
+    supabaseUrl,
+    supabaseServiceKey,
+    {
+      ...supabaseConfig,
+      auth: {
+        ...supabaseConfig.auth,
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
-  }
-);
+  );
+}
+
+// 默认客户端实例
+export const supabase = createSupabaseClient();
+
+// 管理员客户端实例
+export const supabaseAdmin = createAdminClient();
 
 // 创建服务端客户端（用于API路由）
 export function createServerSupabaseClient() {

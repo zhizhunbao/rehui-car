@@ -171,6 +171,172 @@ npm run db:reset      # 重置数据库
 npm run db:seed       # 填充测试数据
 ```
 
+## 🔗 MCP (Model Context Protocol) 配置
+
+MCP 是一个开放标准，允许 AI 助手安全地连接到外部数据源和工具。通过配置 MCP，您可以让 AI 助手直接访问您的 Supabase 数据库、文件系统和 Git 仓库。
+
+### 🚀 已配置的 MCP 服务器
+
+#### 1. Supabase MCP
+- **用途**: 直接访问 Supabase 数据库
+- **配置**: 连接到项目 `nbbeiyfukqelsroqssnz`
+- **功能**: 
+  - 查询数据库表
+  - 执行 SQL 语句
+  - 管理数据
+
+#### 2. 文件系统 MCP
+- **用途**: 访问项目文件
+- **功能**:
+  - 读取文件内容
+  - 搜索文件
+  - 管理项目结构
+
+#### 3. 内存管理 MCP
+- **用途**: 知识图谱和实体关系管理
+- **功能**:
+  - 创建和管理实体
+  - 建立实体关系
+  - 知识图谱查询
+
+#### 4. 浏览器 MCP
+- **用途**: 网页自动化和截图
+- **功能**:
+  - 网页导航
+  - 元素交互
+  - 截图功能
+
+#### 5. GitHub MCP
+- **用途**: 代码仓库管理
+- **功能**:
+  - 仓库操作
+  - 代码搜索
+  - 版本控制
+
+#### 6. 思维链 MCP
+- **用途**: 复杂推理和问题解决
+- **功能**:
+  - 多步骤推理
+  - 问题分析
+  - 解决方案生成
+
+
+### 📁 配置文件位置
+
+```
+.cursor/mcp.json
+```
+
+### 🔒 安全注意事项
+
+**重要**: `.cursor/mcp.json` 文件包含敏感的 API 密钥和访问令牌，已被添加到 `.gitignore` 中，不会上传到 Git 仓库。
+
+如果您需要配置 MCP，请：
+
+1. **使用便捷脚本** (推荐):
+   ```bash
+   npm run mcp:setup
+   ```
+
+2. **或手动复制配置文件**:
+   ```bash
+   cp .cursor/mcp.json.example .cursor/mcp.json
+   ```
+
+3. **填入您的真实 API 密钥**:
+   - GitHub Personal Access Token
+   - Supabase Access Token
+   - Supabase URL 和密钥
+
+4. **重启 Cursor** 使配置生效
+
+### 🔧 配置内容
+
+```json
+{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=nbbeiyfukqelsroqssnz"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+      "env": {
+        "ALLOWED_DIRECTORIES": "."
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-browser"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    }
+  }
+}
+```
+
+### ✅ 验证配置
+
+配置完成后，您应该能够：
+
+1. **在 Cursor 中看到 MCP 连接状态**
+2. **使用 AI 助手直接查询 Supabase 数据库**
+3. **通过 AI 助手管理项目文件**
+4. **使用 AI 助手进行知识图谱管理**
+5. **通过 AI 助手进行网页自动化操作**
+6. **使用 AI 助手管理 GitHub 仓库**
+7. **利用 AI 助手进行复杂推理和问题解决**
+
+### 🔄 重启 Cursor
+
+配置 MCP 后，需要重启 Cursor 以使配置生效：
+
+1. 关闭 Cursor
+2. 重新打开 Cursor
+3. 检查 MCP 连接状态
+
+### 🛠️ 故障排除
+
+#### 如果 MCP 连接失败：
+
+1. **检查网络连接**
+2. **验证 Supabase 项目 ID**
+3. **确保 Cursor 版本支持 MCP**
+
+#### 常见问题：
+
+- **权限问题**: 确保 Supabase 项目有正确的访问权限
+- **网络问题**: 检查防火墙设置
+- **版本问题**: 确保使用最新版本的 Cursor
+
+### 📚 相关链接
+
+- [MCP 官方文档](https://modelcontextprotocol.io/)
+- [Supabase MCP 文档](https://supabase.com/docs/guides/mcp)
+- [Cursor MCP 指南](https://cursor.sh/docs/mcp)
+
+### 🎯 MCP 使用场景
+
+配置完成后，您可以：
+
+1. **直接通过 AI 助手查询数据库**
+2. **让 AI 助手帮您管理数据**
+3. **使用 AI 助手进行代码开发**
+4. **通过 AI 助手进行知识图谱构建**
+5. **使用 AI 助手进行网页自动化测试**
+6. **让 AI 助手帮您管理 GitHub 仓库**
+7. **利用 AI 助手进行复杂问题分析和解决**
+
 ## 📈 性能优化
 
 - **代码分割**: 自动路由级别代码分割

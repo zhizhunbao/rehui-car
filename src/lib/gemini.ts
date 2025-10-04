@@ -14,12 +14,17 @@ import path from 'path';
 const envPath = path.resolve(process.cwd(), '.env.local');
 dotenv.config({ path: envPath });
 
-// Gemini 配置
-const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
-
-if (!GEMINI_API_KEY) {
-  throw new Error('GOOGLE_GEMINI_API_KEY environment variable is required');
+// 严格的环境变量处理 - 完全禁止 fallback 模式
+function requireGeminiApiKey(): string {
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing required environment variable: GOOGLE_GEMINI_API_KEY');
+  }
+  return apiKey;
 }
+
+// Gemini 配置 - 使用严格模式
+const GEMINI_API_KEY = requireGeminiApiKey();
 
 // 初始化 Gemini AI
 export const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -149,7 +154,7 @@ export async function generateConversationSummary(
 function buildChatPrompt(messages: ChatMessage[], language: Language): string {
   const systemPrompt = getSystemPrompt(language);
   const conversationHistory = messages
-    .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
     .join('\n');
   
   return `${systemPrompt}
@@ -178,7 +183,7 @@ function buildCarRecommendationPrompt(userMessage: string, language: Language): 
  */
 function buildSummaryPrompt(messages: ChatMessage[], language: Language): string {
   const conversationHistory = messages
-    .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
     .join('\n');
   
   const languageText = language === 'zh' ? '中文' : '英文';
@@ -285,13 +290,33 @@ function parseAIResponse(response: string): {
   next_steps: NextStep[];
 } {
   try {
+    // 清理响应文本，移除可能的markdown代码块标记
+    let cleanResponse = response.trim();
+    
+    // 移除markdown代码块标记
+    if (cleanResponse.startsWith('```json')) {
+      cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanResponse.startsWith('```')) {
+      cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
     // 尝试提取 JSON 部分
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No JSON found in response');
     }
     
-    const parsed = JSON.parse(jsonMatch[0]);
+    let jsonStr = jsonMatch[0];
+    
+    // 尝试修复常见的JSON格式问题
+    jsonStr = jsonStr
+      .replace(/,(\s*[}\]])/g, '$1') // 移除多余的逗号
+      .replace(/([{\[,])\s*([}\]])/g, '$1$2') // 修复空对象/数组
+      .replace(/([^\\])\n/g, '$1\\n') // 转义换行符
+      .replace(/([^\\])\r/g, '$1\\r') // 转义回车符
+      .replace(/([^\\])\t/g, '$1\\t'); // 转义制表符
+    
+    const parsed = JSON.parse(jsonStr);
     
     return {
       summary: parsed.summary || { en: 'AI response generated', zh: 'AI 响应已生成' },
@@ -300,6 +325,7 @@ function parseAIResponse(response: string): {
     };
   } catch (error) {
     console.error('Failed to parse AI response:', error);
+    console.error('Raw response:', response.substring(0, 500) + '...');
     
     // 返回默认响应
     return {

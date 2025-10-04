@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-10-04T17:01:59.380Z",
+  "required": {
+    "supabase": {
+      "NEXT_PUBLIC_SUPABASE_URL": true,
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": true,
+      "SUPABASE_SERVICE_ROLE_KEY": true,
+      "SUPABASE_TOKEN": true
+    },
+    "app": {
+      "NEXT_PUBLIC_APP_URL": true,
+      "NEXTAUTH_SECRET": true,
+      "NEXTAUTH_URL": true
+    }
+  },
+  "optional": {
+    "ai": {
+      "GOOGLE_GEMINI_API_KEY": true,
+      "GROQ_API_KEY": true
+    },
+    "app_config": {
+      "NEXT_PUBLIC_APP_NAME": true,
+      "NEXT_PUBLIC_APP_VERSION": true,
+      "NODE_ENV": true,
+      "NEXT_PUBLIC_DEBUG": true,
+      "NEXT_PUBLIC_LOG_LEVEL": true
+    },
+    "features": {
+      "NEXT_PUBLIC_ENABLE_ANALYTICS": true,
+      "NEXT_PUBLIC_ENABLE_CHAT_HISTORY": true,
+      "NEXT_PUBLIC_ENABLE_CAR_RECOMMENDATIONS": true,
+      "NEXT_PUBLIC_RATE_LIMIT_REQUESTS": true,
+      "NEXT_PUBLIC_RATE_LIMIT_WINDOW": true,
+      "NEXT_PUBLIC_MAX_FILE_SIZE": true,
+      "NEXT_PUBLIC_ALLOWED_FILE_TYPES": true,
+      "NEXT_PUBLIC_DEFAULT_LANGUAGE": true,
+      "NEXT_PUBLIC_SUPPORTED_LANGUAGES": true
+    },
+    "database": {
+      "DATABASE_URL": true
+    }
+  },
+  "security": {}
+}

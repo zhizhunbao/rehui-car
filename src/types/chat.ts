@@ -3,10 +3,11 @@ import { BilingualText, Language } from './index';
 // 聊天消息类型
 export interface ChatMessage {
   id: string;
-  type: 'user' | 'assistant';
+  conversationId: string;
+  role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
-  metadata?: Record<string, any>;
+  language: Language;
+  createdAt: string;
 }
 
 // 对话类型
@@ -124,4 +125,19 @@ export interface ChatAnalytics {
   most_active_hours: number[];
   common_topics: string[];
   user_satisfaction_score?: number;
+}
+
+// API响应类型
+export interface ChatResponse {
+  message: string;
+  conversationId: string;
+  messageId: string;
+  timestamp: string;
+  metadata?: {
+    model?: string;
+    tokens?: number;
+    context?: any;
+    error?: boolean;
+  };
+  recommendations?: any[];
 } 
